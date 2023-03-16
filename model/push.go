@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/lollipopkit/server_box_monitor/utils"
@@ -19,21 +18,21 @@ func (p *Push) Push(args []*PushFormatArgs) error {
 	return p.PushIface.push(title, content)
 }
 
-// 支持的格式化参数
-// {{key}}: cpu, mem, swap, disk, network
-// {{value}}: 80.5%
+// {{key}} {{value}}
 type PushFormat string
 type PushFormatArgs struct {
 	Key string
 	Value string
 }
 func (pf PushFormat) String(args []*PushFormatArgs) string {
-	s := string(pf)
+	ss := []string{}
 	for _, arg := range args {
-		key := fmt.Sprintf("{{%s}}", arg.Key)
-		pf = PushFormat(strings.ReplaceAll(s, key, arg.Value))
+		s := string(pf)
+		s = strings.ReplaceAll(s, "{{key}}", arg.Key)
+		s = strings.ReplaceAll(s, "{{value}}", arg.Value)
+		ss = append(ss, s)
 	}
-	return s
+	return strings.Join(ss, "\n")
 }
 
 type PushType string

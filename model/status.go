@@ -1,5 +1,12 @@
 package model
 
+import (
+	"errors"
+
+	"github.com/lollipopkit/server_box_monitor/res"
+	"github.com/lollipopkit/server_box_monitor/utils"
+)
+
 type Status struct {
 	CPU     []CPUStatus
 	Mem     MemStatus
@@ -39,7 +46,18 @@ type NetworkStatus struct {
 	ReceiveSpeed  Size
 }
 
+var (
+	ErrRunShellFailed = errors.New("run shell failed")
+)
+
 func GetStatus() (*Status, error) {
-	// TODO
-	return nil, ErrCompareFailed
+	stdout, stderr, err := utils.Execute("bash", res.ServerBoxShellPath)
+	if err != nil {
+		return nil, errors.Join(ErrRunShellFailed, errors.New(stderr))
+	}
+	return ParseStatus(stdout)
+}
+
+func ParseStatus(s string) (*Status, error) {
+	return nil, ErrRunShellFailed
 }

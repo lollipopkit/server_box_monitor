@@ -28,8 +28,13 @@ var (
 			},
 			{
 				MonitorType: MonitorTypeNetwork,
-				Threshold: ">=100m/s",
+				Threshold: ">=17.7m/s",
 				Matcher: "eth0",
+			},
+			{
+				MonitorType: MonitorTypeDisk,
+				Threshold: ">=95.2%",
+				Matcher: "sda1",
 			},
 		},
 		Pushes: []Push{
@@ -40,8 +45,8 @@ var (
 					Headers: map[string]string{"Content-Type": "application/json"},
 					Method: "POST",
 				},
-				TitleFormat: "{{key}} 提醒",
-				ContentFormat: "{{key}} 目前占用 {{value}}",
+				TitleFormat: "[ServerBox] Notification",
+				ContentFormat: "{{key}}: {{value}}",
 			},
 		},
 	}
@@ -51,10 +56,12 @@ func ReadAppConfig() (*AppConfig, error) {
 	if !utils.Exist(res.AppConfigPath) {
 		configBytes, err := json.Marshal(DefaultappConfig)
 		if err != nil {
+			utils.Error("[CONFIG] marshal default app config failed: %v", err)
 			return nil, err
 		}
 		err = os.WriteFile(res.AppConfigPath, configBytes, 0644)
 		if err != nil {
+			utils.Error("[CONFIG] write default app config failed: %v", err)
 			return nil, err
 		}
 		return DefaultappConfig, nil
@@ -63,9 +70,13 @@ func ReadAppConfig() (*AppConfig, error) {
 	appConfig := &AppConfig{}
 	configBytes, err := os.ReadFile(res.AppConfigPath)
 	if err != nil {
+		utils.Error("[CONFIG] read app config failed: %v", err)
 		return nil, err
 	}
 	err = json.Unmarshal(configBytes, appConfig)
+	if err != nil {
+		utils.Error("[CONFIG] unmarshal app config failed: %v", err)
+	}
 	return appConfig, err
 }
 

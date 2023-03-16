@@ -10,13 +10,10 @@ import (
 )
 
 func init() {
-	// Check script file
 	if utils.Exist(res.ServerBoxShellPath) {
-		utils.Info("[INIT] Script has been installed.")
 		return
 	}
 
-	// Write script file
 	scriptBytes, err := res.Files.ReadFile(res.ServerBoxShellFileName)
 	if err != nil {
 		utils.Error("[INIT] Read embed file error: %v", err)
@@ -33,7 +30,6 @@ func Run() {
 	for {
 		appConfig, err := model.ReadAppConfig()
 		if err != nil {
-			utils.Error("[CONFIG] Read file error: %v", err)
 			time.Sleep(model.DefaultappConfig.GetRunInterval())
 			continue
 		}
