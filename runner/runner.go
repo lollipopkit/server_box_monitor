@@ -38,6 +38,8 @@ func Run() {
 			continue
 		}
 
+		args := []*model.PushFormatArgs{}
+
 		for _, rule := range appConfig.Rules {
 			status, err := model.GetStatus()
 			if err != nil {
@@ -45,7 +47,7 @@ func Run() {
 				time.Sleep(appConfig.GetRunInterval())
 				continue
 			}
-			notify, err := rule.ShouldNotify(status)
+			notify, arg, err := rule.ShouldNotify(status)
 			if err != nil {
 				utils.Warn("[RULE] check error: %v", err)
 				time.Sleep(appConfig.GetRunInterval())
@@ -53,7 +55,14 @@ func Run() {
 			}
 
 			if notify {
-				utils.Info("[NOTIFY] %v", rule)
+				args = append(args, arg)
+			}
+		}
+
+		for _, push := range appConfig.Pushes {
+			err := push.Push(args)
+			if err != nil {
+				utils.Warn("[PUSH] Push error: %v", err)
 			}
 		}
 	}

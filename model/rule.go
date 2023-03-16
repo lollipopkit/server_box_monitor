@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -11,23 +12,26 @@ var (
 	ErrInvalidMonitorType   = errors.New("invalid monitor type")
 	ErrInvalidThresholdType = errors.New("invalid threshold type")
 	ErrCompareFailed = errors.New("compare failed")
-
-	ErrThresholdNotSupportPercent = errors.New("not support threshold type: percent, should use amount type, eg: >=80m")
 )
 
 type Rule struct {
 	// eg: "cpu"
 	MonitorType `json:"type"`
-	// eg: ">=80.5%"
+	// eg: ">=80.5%" "<100m" "=10m/s"
+	// Threshold which match speed should use per second
+	// such as "10m/s"
+	// "10m/m" is not allowed 
 	Threshold string `json:"threshold"`
-	// eg: "eth0" "cpu0" "sda1"
+	// eg: "eth0" "cpu0" "sda1" "free"
+	// "cpu0" -> all CPUs
+	// MonitorType = "mem" && Matcher = "free" -> free of memory
 	Matcher string `json:"matcher"`
 }
 
-func (r *Rule) ShouldNotify(s *Status) (bool, error) {
+func (r *Rule) ShouldNotify(s *Status) (bool, *PushFormatArgs, error) {
 	t, err := ParseToThreshold(r.Threshold)
 	if err != nil {
-		return false, errors.Join(ErrInvalidRule, err)
+		return false, nil, errors.Join(ErrInvalidRule, err)
 	}
 	switch r.MonitorType {
 	case MonitorTypeCPU:
@@ -41,29 +45,34 @@ func (r *Rule) ShouldNotify(s *Status) (bool, error) {
 	case MonitorTypeNetwork:
 		return r.shouldNotifyNetwork(s.Network, t)
 	default:
-		return false, errors.Join(ErrInvalidRule, ErrInvalidMonitorType)
+		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidMonitorType)
 	}
 }
 
-func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, error) {
-	idx, err := strconv.ParseInt(r.Matcher, 10, 64)
+func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+	idx, err := strconv.ParseInt(strings.Replace(r.Matcher, "cpu", "", 1), 10, 64)
 	if err != nil {
-		return false, errors.Join(ErrInvalidRule, err)
+		return false, nil, errors.Join(ErrInvalidRule, err)
 	}
 	if idx < 0 || int(idx) >= len(ss) {
-		return false, errors.Join(ErrInvalidRule, fmt.Errorf("cpu index out of range: %d", idx))
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("cpu index out of range: %d", idx))
 	}
 	s := ss[idx]
 	switch t.ThresholdType {
-	case ThresholdTypeSize:
-		return false, errors.Join(ErrInvalidRule, ErrThresholdNotSupportPercent)
 	case ThresholdTypePercent:
-		return t.True(s.UsedPercent)
+		ok, err := t.True(s.UsedPercent)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: fmt.Sprintf("cpu%d", idx),
+			Value: fmt.Sprintf("%.2f%%", s.UsedPercent),
+		}, nil
 	default:
-		return false, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
 	}
 }
-func (r *Rule) shouldNotifyMemory(s MemStatus, t *Threshold) (bool, error) {
+func (r *Rule) shouldNotifyMemory(s MemStatus, t *Threshold) (bool, *PushFormatArgs, error) {
 	var size Size
 	var percent float64
 	switch r.Matcher {
@@ -77,19 +86,33 @@ func (r *Rule) shouldNotifyMemory(s MemStatus, t *Threshold) (bool, error) {
 		size = s.Cached
 		percent = float64(s.Cached) / float64(s.Total)
 	default:
-		return false, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
 	}
 
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
-		return t.True(size)
+		ok, err := t.True(size)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: r.Matcher + "of Memory",
+			Value: size.String(),
+		}, nil
 	case ThresholdTypePercent:
-		return t.True(percent)
+		ok, err := t.True(percent)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: r.Matcher + "of Memory",
+			Value: fmt.Sprintf("%.2f%%", percent*100),
+		}, nil
 	default:
-		return false, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
 	}
 }
-func (r *Rule) shouldNotifySwap(s SwapStatus, t *Threshold) (bool, error) {
+func (r *Rule) shouldNotifySwap(s SwapStatus, t *Threshold) (bool, *PushFormatArgs, error) {
 	var size Size
 	var percent float64
 	switch r.Matcher {
@@ -100,19 +123,33 @@ func (r *Rule) shouldNotifySwap(s SwapStatus, t *Threshold) (bool, error) {
 		size = s.Free
 		percent = float64(s.Free) / float64(s.Total)
 	default:
-		return false, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
 	}
 
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
-		return t.True(size)
+		ok, err := t.True(size)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: r.Matcher + "of Swap",
+			Value: size.String(),
+		}, nil
 	case ThresholdTypePercent:
-		return t.True(percent)
+		ok, err := t.True(percent)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: r.Matcher + "of Swap",
+			Value: fmt.Sprintf("%.2f%%", percent*100),
+		}, nil
 	default:
-		return false, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false , nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
 	}
 }
-func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, error) {
+func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormatArgs, error) {
 	var disk DiskStatus
 	var have bool
 	for _, d := range s {
@@ -123,19 +160,33 @@ func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, error) {
 		}
 	}
 	if !have {
-		return false, errors.Join(ErrInvalidRule, fmt.Errorf("disk not found: %s", r.Matcher))
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("disk not found: %s", r.Matcher))
 	}
 
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
-		return t.True(disk.UsedAmount)
+		ok, err := t.True(disk.UsedAmount)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: r.Matcher,
+			Value: disk.UsedAmount.String(),
+		}, nil
 	case ThresholdTypePercent:
-		return t.True(disk.UsedPercent)
+		ok, err := t.True(disk.UsedPercent)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: r.Matcher,
+			Value: fmt.Sprintf("%.2f%%", disk.UsedPercent),
+		}, nil
 	default:
-		return false, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
 	}
 }
-func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, error) {
+func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *PushFormatArgs, error) {
 	var net NetworkStatus
 	var have bool
 	for _, n := range s {
@@ -146,15 +197,20 @@ func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, error
 		}
 	}
 	if !have {
-		return false, errors.Join(ErrInvalidRule, fmt.Errorf("network interface not found: %s", r.Matcher))
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("network interface not found: %s", r.Matcher))
 	}
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
-		return t.True(net.TransmitSpeed)
-	case ThresholdTypePercent:
-		return false, errors.Join(ErrInvalidRule, ErrThresholdNotSupportPercent)
+		ok, err := t.True(net.TransmitSpeed)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key: r.Matcher,
+			Value: net.TransmitSpeed.String(),
+		}, nil
 	default:
-		return false, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
 	}
 }
 

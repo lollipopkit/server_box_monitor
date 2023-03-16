@@ -13,7 +13,7 @@ type Push struct {
 	TitleFormat PushFormat `json:"title"`
 	ContentFormat PushFormat `json:"content"`
 }
-func (p *Push) Push(args []PushFormatArgs) error {
+func (p *Push) Push(args []*PushFormatArgs) error {
 	title := p.TitleFormat.String(args)
 	content := p.ContentFormat.String(args)
 	return p.PushIface.push(title, content)
@@ -27,7 +27,7 @@ type PushFormatArgs struct {
 	Key string
 	Value string
 }
-func (pf PushFormat) String(args []PushFormatArgs) string {
+func (pf PushFormat) String(args []*PushFormatArgs) string {
 	s := string(pf)
 	for _, arg := range args {
 		key := fmt.Sprintf("{{%s}}", arg.Key)

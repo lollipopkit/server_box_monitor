@@ -26,17 +26,22 @@ var (
 				Threshold: ">=80%",
 				Matcher: "0",
 			},
+			{
+				MonitorType: MonitorTypeNetwork,
+				Threshold: ">=100m/s",
+				Matcher: "eth0",
+			},
 		},
 		Pushes: []Push{
 			{
 				PushType: PushTypeWebhook,
 				PushIface: &PushWebhook{
-					Url: "http://",
+					Url: "http://httpbin.org/post",
 					Headers: map[string]string{"Content-Type": "application/json"},
 					Method: "POST",
 				},
-				TitleFormat: "{{type}} 提醒",
-				ContentFormat: "{{type}} 当前使用率为 {{value}}",
+				TitleFormat: "{{key}} 提醒",
+				ContentFormat: "{{key}} 目前占用 {{value}}",
 			},
 		},
 	}

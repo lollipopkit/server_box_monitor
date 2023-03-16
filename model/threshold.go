@@ -26,7 +26,11 @@ func ParseToThreshold(s string) (*Threshold, error) {
 	if utils.Contains(runes, '%') {
 		thresholdType = ThresholdTypePercent
 	} else if utils.Contains(sizeSuffix, string(runes[len(runes)-1])) {
-		thresholdType = ThresholdTypeSize
+		if strings.HasSuffix(s, "/s") {
+			thresholdType = ThresholdTypeSpeed
+		} else {
+			thresholdType = ThresholdTypeSize
+		}
 	}
 	runes = runes[:len(runes)-1]
 	if runes[0] == '<' {
@@ -116,9 +120,11 @@ type ThresholdType uint8
 
 const (
 	ThresholdTypeUnknown ThresholdType = iota
-	// eg.: 80% 80.001%
+	// eg: 80% 80.001%
 	ThresholdTypePercent
-	// eg.: 100m 10k 1g
+	// eg: 100m 10k 1g
 	// Values should be in lower case
 	ThresholdTypeSize
+	// eg: 10m/s
+	ThresholdTypeSpeed
 )
