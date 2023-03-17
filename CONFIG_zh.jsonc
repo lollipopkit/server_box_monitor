@@ -37,8 +37,8 @@
     // 推送规则
     // 类型 type: webhook, ios (以后有更多)
     // 接口 iface: 推送类型的接口
-    // body成功正则 success_body_regex: 正则表达式匹配响应体
-    // 成功code success_code: 响应码匹配
+    // body成功正则 body_regex: 正则表达式匹配响应体
+    // 成功code code: 响应码匹配
     "pushes": [
         {
             // 这是一个推送到QQ群的例子
@@ -64,12 +64,12 @@
                     }
                 }
             },
-            // 如果regex和code
+            // 如果 regex 和 code 唯恐
             // 如果响应体匹配，推送将被认为成功
             // 如果不填，将不会检查响应体
-            "success_body_regex": ".*",
+            "body_regex": ".*",
             // 如果响应码匹配，推送将被认为成功
-            "success_code": 200
+            "code": 200
         },
         {
             "type": "ios",

@@ -11,10 +11,10 @@ import (
 )
 
 type Push struct {
-	Type             PushType        `json:"type"`
-	Iface            json.RawMessage `json:"iface"`
-	SuccessBodyRegex string          `json:"success_body_regex"`
-	SuccessCode      int             `json:"success_code"`
+	Type      PushType        `json:"type"`
+	Iface     json.RawMessage `json:"iface"`
+	BodyRegex string          `json:"body_regex"`
+	Code      int             `json:"code"`
 }
 
 func (p *Push) GetIface() (PushIface, error) {
@@ -43,11 +43,11 @@ func (p *Push) Push(args []*PushPair) error {
 		return err
 	}
 	resp, code, err := iface.push(args)
-	if p.SuccessCode != 0 && code != p.SuccessCode {
+	if p.Code != 0 && code != p.Code {
 		return fmt.Errorf("code: %d, resp: %s", code, string(resp))
 	}
-	if p.SuccessBodyRegex != "" {
-		reg, err := regexp.Compile(p.SuccessBodyRegex)
+	if p.BodyRegex != "" {
+		reg, err := regexp.Compile(p.BodyRegex)
 		if err != nil {
 			return fmt.Errorf("compile regex failed: %s", err.Error())
 		}
@@ -102,25 +102,41 @@ type PushIface interface {
 }
 
 type PushIOS struct {
-	Name string `json:"name"`
-	Token string `json:"token"`
-	Title PushFormat `json:"title"`
+	Name    string     `json:"name"`
+	Token   string     `json:"token"`
+	Title   PushFormat `json:"title"`
 	Content PushFormat `json:"content"`
 }
 
 func (p PushIOS) push(args []*PushPair) ([]byte, int, error) {
 	title := p.Title.String(args)
 	content := p.Content.String(args)
-	func (a,b string){}(title, content)
-	return nil, 0, errors.New("ios push now is not implemented")
+	body := map[string]string{
+		"token":   p.Token,
+		"title":   title,
+		"content": content,
+	}
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return nil, 0, err
+	}
+	return utils.HttpDo(
+		"POST",
+		"https://push.lolli.tech/v1/ios",
+		string(bodyBytes),
+		map[string]string{
+			"Content-Type": "application/json",
+			"App":          "ServerBoxMonitor",
+		},
+	)
 }
 
 type PushWebhook struct {
-	Name string `json:"name"`
+	Name    string            `json:"name"`
 	Url     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
 	Method  string            `json:"method"`
-	Body json.RawMessage `json:"body"`
+	Body    json.RawMessage   `json:"body"`
 }
 
 func (p PushWebhook) push(args []*PushPair) ([]byte, int, error) {

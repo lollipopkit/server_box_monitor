@@ -14,11 +14,11 @@ var (
 )
 
 type AppConfig struct {
-	Version  int `json:"version"`
+	Version int `json:"version"`
 	// Such as "300ms", "-1.5h" or "2h45m".
 	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 	// Values less than 1 minute are not allowed.
-	Interval string`json:"interval"`
+	Interval string `json:"interval"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
 }
@@ -79,7 +79,7 @@ var (
 		},
 	}
 	defaultWekhookBodyBytes, _ = json.Marshal(defaultWekhookBody)
-	defaultWebhookIface = PushWebhook{
+	defaultWebhookIface        = PushWebhook{
 		Name: "QQ Group",
 		Url:  "http://localhost:5700",
 		Headers: map[string]string{
@@ -87,14 +87,14 @@ var (
 			"Authorization": "Bearer YOUR_SECRET",
 		},
 		Method: "POST",
-		Body: defaultWekhookBodyBytes,
+		Body:   defaultWekhookBodyBytes,
 	}
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
 
 	defaultIOSIface = PushIOS{
-		Name: "My iPhone",
-		Token: "YOUR_TOKEN",
-		Title: "Server Notification",
+		Name:    "My iPhone",
+		Token:   "YOUR_TOKEN",
+		Title:   "Server Notification",
 		Content: "{{key}}: {{value}}",
 	}
 	defaultIOSIfaceBytes, _ = json.Marshal(defaultIOSIface)
@@ -116,16 +116,16 @@ var (
 		},
 		Pushes: []Push{
 			{
-				Type: PushTypeWebhook,
-				Iface: defaultWebhookIfaceBytes,
-				SuccessBodyRegex: ".*",
-				SuccessCode:      200,
+				Type:      PushTypeWebhook,
+				Iface:     defaultWebhookIfaceBytes,
+				BodyRegex: ".*",
+				Code:      200,
 			},
 			{
-				Type: PushTypeIOS,
-				Iface: defaultIOSIfaceBytes,
-				SuccessBodyRegex: ".*",
-				SuccessCode:      200,
+				Type:      PushTypeIOS,
+				Iface:     defaultIOSIfaceBytes,
+				BodyRegex: ".*",
+				Code:      200,
 			},
 		},
 	}

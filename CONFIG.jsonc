@@ -6,9 +6,11 @@
     // Values less than 1m will be ignored
     "interval": "1m",
     // Check rules
-    // Valid types: cpu, mem, net, disk, temp (temperature), swap
     //
-    // Threshold
+    // Type: 
+    // cpu, mem, net, disk, temp (temperature), swap
+    //
+    // Threshold:
     // format: COMPARE_OPERATOR VALUE UNIT
     // COMPARE_OPERATOR: >, >=, <, <=, =
     // VALUE: int/float: 0.1 1 1.1
@@ -35,6 +37,7 @@
         }
     ],
     // Push rules
+    //
     // type: webhook, ios (more to come)
     // iface: interface for the push type
     // success_body_regex: regex to match the response body
@@ -66,9 +69,9 @@
             },
             // Regex to match the response body
             // If the response body matches the regex, the push is considered successful
-            "success_body_regex": ".*",
+            "body_regex": ".*",
             // If the response code equals, the push is considered successful
-            "success_code": 200
+            "code": 200
         },
         {
             "type": "ios",
@@ -78,8 +81,13 @@
                 // {{key}} and {{value}} will be replaced with the key and value of the check
                 "title": "Server Notification",
                 // {{key}} and {{value}} will be replaced with the key and value of the check
-                "body": "{{key}}: {{value}}"
-            }
+                "content": "{{key}}: {{value}}"
+            },
+            // Regex to match the response body
+            // If the response body matches the regex, the push is considered successful
+            "body_regex": ".*",
+            // If the response code equals, the push is considered successful
+            "code": 200
         }
     ]
 }
