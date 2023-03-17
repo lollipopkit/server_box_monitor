@@ -7,23 +7,42 @@ import (
 )
 
 type Push struct {
-	PushType `json:"type"`
-	PushIface `json:"iface"`
-	TitleFormat PushFormat `json:"title"`
+	PushType      `json:"type"`
+	PushIface     any        `json:"iface"`
+	TitleFormat   PushFormat `json:"title"`
 	ContentFormat PushFormat `json:"content"`
 }
+
 func (p *Push) Push(args []*PushFormatArgs) error {
 	title := p.TitleFormat.String(args)
 	content := p.ContentFormat.String(args)
-	return p.PushIface.push(title, content)
+	var iface PushIface
+	switch p.PushType {
+	case PushTypeIOS:
+		iface = p.PushIface.(*PushIOS)
+	case PushTypeWebhook:
+		iface = p.PushIface.(*PushWebhook)
+	}
+	return iface.push(title, content)
+}
+func (p *Push) Id() string {
+	switch p.PushType {
+	case PushTypeIOS:
+		return "iOS-" + p.PushIface.(*PushIOS).Token[:7]
+	case PushTypeWebhook:
+		return "Webhook-" + p.PushIface.(*PushWebhook).Url
+	default:
+		return "UnknownPushId"
+	}
 }
 
 // {{key}} {{value}}
 type PushFormat string
 type PushFormatArgs struct {
-	Key string
+	Key   string
 	Value string
 }
+
 func (pf PushFormat) String(args []*PushFormatArgs) string {
 	ss := []string{}
 	for _, arg := range args {
@@ -36,9 +55,10 @@ func (pf PushFormat) String(args []*PushFormatArgs) string {
 }
 
 type PushType string
+
 const (
-	PushTypeIOS PushType = "ios"
-	PushTypeWebhook = "webhook"
+	PushTypeIOS     PushType = "ios"
+	PushTypeWebhook          = "webhook"
 )
 
 type PushIface interface {
@@ -54,9 +74,9 @@ func (p *PushIOS) push(title, content string) error {
 }
 
 type PushWebhook struct {
-	Url string `json:"url"`
+	Url     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
-	Method string `json:"method"`
+	Method  string            `json:"method"`
 }
 
 func (p *PushWebhook) push(title, content string) error {

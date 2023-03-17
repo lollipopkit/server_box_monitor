@@ -10,42 +10,44 @@ import (
 )
 
 type AppConfig struct {
-	// such as "300ms", "-1.5h" or "2h45m". 
+	// such as "300ms", "-1.5h" or "2h45m".
 	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-	ScriptRunInterval string `json:"script_run_interval"`
-	Rules			 []Rule `json:"rules"`
-	Pushes []Push `json:"pushes"`
+	Interval string `json:"interval"`
+	Rules    []Rule `json:"rules"`
+	Pushes   []Push `json:"pushes"`
+	Version int   `json:"version"`
 }
 
 var (
 	DefaultappConfig = &AppConfig{
-		ScriptRunInterval: "3m",
+		Version: 1,
+		Interval: "3m",
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,
-				Threshold: ">=80%",
-				Matcher: "0",
+				Threshold:   ">=80%",
+				Matcher:     "0",
 			},
 			{
 				MonitorType: MonitorTypeNetwork,
-				Threshold: ">=17.7m/s",
-				Matcher: "eth0",
+				Threshold:   ">=17.7m/s",
+				Matcher:     "eth0",
 			},
 			{
 				MonitorType: MonitorTypeDisk,
-				Threshold: ">=95.2%",
-				Matcher: "sda1",
+				Threshold:   ">=95.2%",
+				Matcher:     "sda1",
 			},
 		},
 		Pushes: []Push{
 			{
 				PushType: PushTypeWebhook,
 				PushIface: &PushWebhook{
-					Url: "http://httpbin.org/post",
+					Url:     "http://httpbin.org/post",
 					Headers: map[string]string{"Content-Type": "application/json"},
-					Method: "POST",
+					Method:  "POST",
 				},
-				TitleFormat: "[ServerBox] Notification",
+				TitleFormat:   "[ServerBox] Notification",
 				ContentFormat: "{{key}}: {{value}}",
 			},
 		},
@@ -66,7 +68,7 @@ func ReadAppConfig() (*AppConfig, error) {
 		}
 		return DefaultappConfig, nil
 	}
-	
+
 	appConfig := &AppConfig{}
 	configBytes, err := os.ReadFile(res.AppConfigPath)
 	if err != nil {
@@ -76,20 +78,17 @@ func ReadAppConfig() (*AppConfig, error) {
 	err = json.Unmarshal(configBytes, appConfig)
 	if err != nil {
 		utils.Error("[CONFIG] unmarshal app config failed: %v", err)
+	} else if appConfig.Version < DefaultappConfig.Version {
+		utils.Warn("[CONFIG] app config version is too old, please update it")
 	}
 	return appConfig, err
 }
 
 func (ac *AppConfig) GetRunInterval() time.Duration {
-	sri := ac.ScriptRunInterval
-	d, err := time.ParseDuration(sri)
+	d, err := time.ParseDuration(ac.Interval)
 	if err == nil {
 		return d
 	}
-	sri = "3m"
-	d, err = time.ParseDuration(sri)
-	if err == nil {
-		return d
-	}
+	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 3m", err)
 	return time.Minute * 3
 }

@@ -2,6 +2,10 @@ package res
 
 import (
 	"embed"
+	"os"
+	"path/filepath"
+
+	"github.com/lollipopkit/server_box_monitor/utils"
 )
 
 var (
@@ -10,15 +14,25 @@ var (
 )
 
 const (
-	APP_NAME = "ServerBoxMonitor"
+	APP_NAME    = "ServerBoxMonitor"
 	APP_VERSION = "0.0.1"
 )
 
 var (
 	ServerBoxShellFileName = "monitor.sh"
-	ServerBoxDirPath = ".config/server_box/"
-	// ServerBoxDirPath = os.Getenv("HOME") + ".config/server_box/"
-	ServerBoxShellPath = ServerBoxDirPath + ServerBoxShellFileName
+	ServerBoxDirPath       = filepath.Join(os.Getenv("HOME"), ".config", "server_box")
+	ServerBoxShellPath     = filepath.Join(ServerBoxDirPath, ServerBoxShellFileName)
 
-	AppConfigPath = ServerBoxDirPath + "config.json"
+	AppConfigFileName = "config.json"
+	AppConfigPath     = filepath.Join(ServerBoxDirPath, AppConfigFileName)
 )
+
+func init() {
+	if !utils.Exist(ServerBoxDirPath) {
+		err := os.MkdirAll(ServerBoxDirPath, 0755)
+		if err != nil {
+			utils.Error("[INIT] Create dir error: %v", err)
+			panic(err)
+		}
+	}
+}

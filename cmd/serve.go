@@ -10,7 +10,7 @@ func init() {
 		Name:    "serve",
 		Aliases: []string{"s"},
 		Usage:   "Run monitor",
-		Action: handleServe,
+		Action:  handleServe,
 	})
 }
 
