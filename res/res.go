@@ -29,7 +29,7 @@ var (
 )
 
 const (
-	DefaultInterval = time.Second * 5
+	DefaultInterval = time.Minute
 )
 
 func init() {

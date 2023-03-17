@@ -41,7 +41,7 @@ func Run() {
 		utils.Error("[CONFIG] Read app config error: %v", err)
 		panic(err)
 	}
-	
+
 	for {
 		err = model.RefreshStatus()
 		status := model.GetStatus()
@@ -69,7 +69,7 @@ func Run() {
 			goto SLEEP
 		}
 
-		utils.Info("[STATUS] refreshed, %d to push", len(pushPairs))
+		// utils.Info("[STATUS] refreshed, %d to push", len(pushPairs))
 
 		pushPairsLock.RLock()
 		for _, push := range model.Config.Pushes {

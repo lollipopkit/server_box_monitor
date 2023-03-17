@@ -101,7 +101,7 @@ var (
 
 	DefaultappConfig = &AppConfig{
 		Version:  1,
-		Interval: "3m",
+		Interval: "1m",
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,
