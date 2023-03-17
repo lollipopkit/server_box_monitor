@@ -25,11 +25,13 @@ type Rule struct {
 	// "10m/m" is not allowed
 	Threshold string `json:"threshold"`
 	// eg: "eth0-in" "cpu0" "sda1" "free"
-	// "cpu0" -> all CPUs
+	// "cpu" -> all CPUs
 	// MonitorType = "mem" && Matcher = "free" -> free of memory
 	// MonitorType = "net" && Matcher = "eth0-in" -> in speed of eth0
-	// MonitorType = "net" && Matcher = "eth0-out-in" -> out + in speed of eth0
-	// MonitorType = "disk" && Matcher = "sda1" -> used percent of sda1
+	// MonitorType = "net" && Matcher = "eth0" -> out + in speed of eth0
+	// MonitorType = "disk" && Matcher = "/dev/sda1" -> used percent of sda1
+	// MonitorType = "disk" && Matcher = "/" -> used percent of mounted path "/"
+	// MonitorType = "temp" && Matcher = "x86_pkg" -> temperature of x86_pkg
 	Matcher string `json:"matcher"`
 }
 
@@ -64,10 +66,16 @@ func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushFormatA
 		// utils.Warn("cpu is not valid, skip this rule")
 		return false, nil, nil
 	}
-	idx, err := strconv.ParseInt(strings.Replace(r.Matcher, "cpu", "", 1), 10, 64)
-	if err != nil {
-		return false, nil, errors.Join(ErrInvalidRule, err)
+	// 默认获取所有cpu
+	var idx int64 = 0
+	if r.Matcher != "" && r.Matcher != "cpu" {
+		idx_, err := strconv.ParseUint(strings.Replace(r.Matcher, "cpu", "", 1), 10, 64)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		idx = int64(idx_ + 1)
 	}
+	
 	if idx < 0 || int(idx) >= len(ss) {
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("cpu index out of range: %d", idx))
 	}
@@ -78,9 +86,13 @@ func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushFormatA
 		if err != nil {
 			return false, nil, errors.Join(ErrInvalidRule, err)
 		}
+		usedPercent, err := s.UsedPercent()
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
 		return ok, &PushFormatArgs{
 			Key:   fmt.Sprintf("cpu%d", idx),
-			Value: fmt.Sprintf("%.2f%%", s.UsedPercent),
+			Value: fmt.Sprintf("%.2f%%", usedPercent),
 		}, nil
 	default:
 		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
@@ -94,15 +106,15 @@ func (r *Rule) shouldNotifyMemory(s *MemStatus, t *Threshold) (bool, *PushFormat
 	var size Size
 	var percent float64
 	switch r.Matcher {
-	case "used":
-		size = s.Used
-		percent = float64(s.Used) / float64(s.Total)
+	case "avail":
+		size = s.Avail
+		percent = float64(s.Avail) / float64(s.Total)
 	case "free":
 		size = s.Free
 		percent = float64(s.Free) / float64(s.Total)
-	case "cached":
-		size = s.Cached
-		percent = float64(s.Cached) / float64(s.Total)
+	case "used":
+		size = s.Used
+		percent = float64(s.Used) / float64(s.Total)
 	default:
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
 	}
@@ -179,7 +191,7 @@ func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormat
 	var disk DiskStatus
 	var have bool
 	for _, d := range s {
-		if d.Device == r.Matcher {
+		if d.MountPath == r.Matcher || d.Filesystem == r.Matcher {
 			disk = d
 			have = true
 			break
@@ -191,13 +203,13 @@ func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormat
 
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
-		ok, err := t.True(disk.UsedAmount)
+		ok, err := t.True(disk.Used)
 		if err != nil {
 			return false, nil, errors.Join(ErrInvalidRule, err)
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher,
-			Value: disk.UsedAmount.String(),
+			Value: disk.Used.String(),
 		}, nil
 	case ThresholdTypePercent:
 		ok, err := t.True(disk.UsedPercent)
@@ -221,7 +233,7 @@ func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *Push
 	var net NetworkStatus
 	var have bool
 	for _, n := range s {
-		if strings.Contains(r.Matcher, n.Interface)  {
+		if strings.Contains(r.Matcher, n.Interface) {
 			net = n
 			have = true
 			break
@@ -235,7 +247,9 @@ func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *Push
 	in := strings.Contains(r.Matcher, "-in")
 	out := strings.Contains(r.Matcher, "-out")
 	if !in && !out {
-		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
+		// 如果没有指定方向，则默认计算 出+入 流量
+		in = true
+		out = true
 	}
 
 	switch t.ThresholdType {
@@ -305,10 +319,10 @@ func (r *Rule) shouldNotifyTemperature(s []TemperatureStatus, t *Threshold) (boo
 type MonitorType string
 
 const (
-	MonitorTypeCPU     MonitorType = "cpu"
-	MonitorTypeMemory              = "mem"
-	MonitorTypeSwap                = "swap"
-	MonitorTypeDisk                = "disk"
-	MonitorTypeNetwork             = "net"
-	MonitorTypeTemperature         = "temp"
+	MonitorTypeCPU         MonitorType = "cpu"
+	MonitorTypeMemory                  = "mem"
+	MonitorTypeSwap                    = "swap"
+	MonitorTypeDisk                    = "disk"
+	MonitorTypeNetwork                 = "net"
+	MonitorTypeTemperature             = "temp"
 )
