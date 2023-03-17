@@ -3,16 +3,18 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/lollipopkit/server_box_monitor/utils"
 )
 
 type Push struct {
-	Type          PushType        `json:"type"`
-	Iface         json.RawMessage `json:"iface"`
-	TitleFormat   PushFormat      `json:"title"`
-	ContentFormat PushFormat      `json:"content"`
+	Type             PushType        `json:"type"`
+	Iface            json.RawMessage `json:"iface"`
+	SuccessBodyRegex string          `json:"success_body_regex"`
+	SuccessCode      int             `json:"success_code"`
 }
 
 func (p *Push) GetIface() (PushIface, error) {
@@ -36,13 +38,24 @@ func (p *Push) GetIface() (PushIface, error) {
 }
 
 func (p *Push) Push(args []*PushFormatArgs) error {
-	title := p.TitleFormat.String(args)
-	content := p.ContentFormat.String(args)
 	iface, err := p.GetIface()
 	if err != nil {
 		return err
 	}
-	return iface.push(title, content)
+	resp, code, err := iface.push(args)
+	if p.SuccessCode != 0 && code != p.SuccessCode {
+		return fmt.Errorf("[PUSH] failed, code: %d, resp: %s", code, string(resp))
+	}
+	if p.SuccessBodyRegex != "" {
+		reg, err := regexp.Compile(p.SuccessBodyRegex)
+		if err != nil {
+			return fmt.Errorf("[PUSH] compile regex failed: %s", err.Error())
+		}
+		if !reg.Match(resp) {
+			return fmt.Errorf("[PUSH] failed, resp: %s", string(resp))
+		}
+	}
+	return nil
 }
 func (p *Push) Id() string {
 	iface, err := p.GetIface()
@@ -51,11 +64,11 @@ func (p *Push) Id() string {
 	}
 	switch iface.(type) {
 	case PushIOS:
-		return "iOS-" + iface.(PushIOS).Token[:7]
+		return iface.(PushIOS).Name
 	case PushWebhook:
-		return "Webhook-" + iface.(PushWebhook).Url
+		return iface.(PushWebhook).Name
 	default:
-		return "UnknownPushId"
+		return fmt.Sprintf("UnknownPushId%v", iface)
 	}
 }
 
@@ -85,36 +98,38 @@ const (
 )
 
 type PushIface interface {
-	push(title, content string) error
+	push([]*PushFormatArgs) ([]byte, int, error)
 }
 
 type PushIOS struct {
+	Name string `json:"name"`
 	Token string `json:"token"`
+	Title PushFormat `json:"title"`
+	Content PushFormat `json:"content"`
 }
 
-func (p PushIOS) push(title, content string) error {
-	return nil
+func (p PushIOS) push(args []*PushFormatArgs) ([]byte, int, error) {
+	title := p.Title.String(args)
+	content := p.Content.String(args)
+	func (a,b string){}(title, content)
+	return nil, 0, errors.New("ios push now is not implemented")
 }
 
 type PushWebhook struct {
+	Name string `json:"name"`
 	Url     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
 	Method  string            `json:"method"`
+	Body json.RawMessage `json:"title"`
 }
 
-func (p PushWebhook) push(title, content string) error {
-	body := strings.Join([]string{title, content}, "\n")
+func (p PushWebhook) push(args []*PushFormatArgs) ([]byte, int, error) {
+	body := PushFormat(p.Body).String(args)
 	switch p.Method {
 	case "GET":
-		resp, err := utils.HttpDo("GET", p.Url, body, p.Headers)
-		if err != nil {
-			utils.Warn("[PUSH] webhook GET failed: '%v', resp: '%s'", err, resp)
-		}
+		return utils.HttpDo("GET", p.Url, body, p.Headers)
 	case "POST":
-		resp, err := utils.HttpDo("POST", p.Url, body, p.Headers)
-		if err != nil {
-			utils.Warn("[PUSH] webhook POST failed: '%v', resp: '%s'", err, resp)
-		}
+		return utils.HttpDo("POST", p.Url, body, p.Headers)
 	}
-	return nil
+	return nil, 0, fmt.Errorf("unknown method: %s", p.Method)
 }

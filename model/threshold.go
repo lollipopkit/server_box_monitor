@@ -138,6 +138,7 @@ const (
 )
 
 type ThresholdType uint8
+
 const (
 	ThresholdTypeUnknown ThresholdType = iota
 	// eg: 80% 80.001%
@@ -150,6 +151,7 @@ const (
 	// eg: 32c
 	ThresholdTypeTemperature
 )
+
 func (tt *ThresholdType) Name() string {
 	switch *tt {
 	case ThresholdTypePercent:

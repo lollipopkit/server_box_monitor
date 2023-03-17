@@ -66,10 +66,7 @@ func Run() {
 			}
 		}
 
-		if len(pushArgs) == 0 {
-			goto SLEEP
-		}
-
+		// utils.Info("[STATUS] refreshed, %d to push", len(pushArgs))
 	SLEEP:
 		time.Sleep(model.Config.GetRunInterval())
 		continue
@@ -81,6 +78,11 @@ func Push() {
 		err := model.ReadAppConfig()
 		if err != nil {
 			time.Sleep(model.DefaultappConfig.GetRunInterval())
+			continue
+		}
+
+		if len(pushArgs) == 0 {
+			time.Sleep(model.Config.GetPushInterval())
 			continue
 		}
 

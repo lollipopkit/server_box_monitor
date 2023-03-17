@@ -37,32 +37,47 @@ var (
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,
-				Threshold:   ">=80%",
+				Threshold:   ">=77%",
 				Matcher:     "0",
 			},
 			{
 				MonitorType: MonitorTypeNetwork,
-				Threshold:   ">=17.7m/s",
+				Threshold:   ">=7.7m/s",
 				Matcher:     "eth0",
-			},
-			{
-				MonitorType: MonitorTypeDisk,
-				Threshold:   ">=95.2%",
-				Matcher:     "sda1",
 			},
 		},
 		Pushes: []Push{
 			{
 				Type: PushTypeWebhook,
 				Iface: []byte(`{
-					"url": "http://httpbin.org/post",
+					"name": "QQ Group",
+					"url": "http://localhost:5700",
 					"headers": {
 						"Content-Type": "application/json"
+						"Auhtorization": "Bearer YOUR_SECRET"
 					},
-					"method": "POST"
+					"method": "POST",
+					"body": {
+						"action": "send_group_msg",
+						"params": {
+							"group_id": 123456789,
+							"message": "ServerBox Notification: {{key}}: {{value}}"
+						}
+					}
 				}`),
-				TitleFormat:   "[ServerBox] Notification",
-				ContentFormat: "{{key}}: {{value}}",
+				SuccessBodyRegex: ".*",
+				SuccessCode:      200,
+			},
+			{
+				Type: PushTypeIOS,
+				Iface: []byte(`{
+					"name": "My iPhone",
+					"token": "YOUR_TOKEN",
+					"title": "Server Notification",
+					"content": "{{key}}: {{value}}"
+				}`),
+				SuccessBodyRegex: ".*",
+				SuccessCode:      200,
 			},
 		},
 	}

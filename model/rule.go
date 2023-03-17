@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrInvalidRule          = errors.New("invalid rule")
-	ErrInvalidMonitorType   = errors.New("invalid monitor type")
+	ErrInvalidRule        = errors.New("invalid rule")
+	ErrInvalidMonitorType = errors.New("invalid monitor type")
 )
 
 type Rule struct {
@@ -30,6 +30,7 @@ type Rule struct {
 	// MonitorType = "temp" && Matcher = "x86_pkg" -> temperature of x86_pkg
 	Matcher string `json:"matcher"`
 }
+
 func (r *Rule) Id() string {
 	return fmt.Sprintf("[%s %s %s]", r.MonitorType, r.Threshold, r.Matcher)
 }
