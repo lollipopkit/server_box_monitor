@@ -79,6 +79,12 @@ func Run() {
 
 func Push() {
 	for {
+		err := model.ReadAppConfig()
+		if err != nil {
+			time.Sleep(model.DefaultappConfig.GetRunInterval())
+			continue
+		}
+		
 		for _, push := range model.Config.Pushes {
 			pushArgsLock.RLock()
 			err := push.Push(pushArgs)

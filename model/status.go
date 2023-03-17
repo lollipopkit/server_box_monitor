@@ -17,7 +17,7 @@ var (
 )
 
 var (
-	status *Status
+	status = new(Status)
 )
 
 func GetStatus() *Status {

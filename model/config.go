@@ -14,7 +14,7 @@ var (
 )
 
 type AppConfig struct {
-	Version int   `json:"version"`
+	Version  int `json:"version"`
 	Interval `json:"interval"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
@@ -32,7 +32,7 @@ type Interval struct {
 
 var (
 	DefaultappConfig = &AppConfig{
-		Version: 1,
+		Version:  1,
 		Interval: Interval{Run: "5s", Push: "5m"},
 		Rules: []Rule{
 			{
@@ -53,12 +53,14 @@ var (
 		},
 		Pushes: []Push{
 			{
-				PushType: PushTypeWebhook,
-				PushIface: &PushWebhook{
-					Url:     "http://httpbin.org/post",
-					Headers: map[string]string{"Content-Type": "application/json"},
-					Method:  "POST",
-				},
+				Type: PushTypeWebhook,
+				Iface: []byte(`{
+					"url": "http://httpbin.org/post",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"method": "POST"
+				}`),
 				TitleFormat:   "[ServerBox] Notification",
 				ContentFormat: "{{key}}: {{value}}",
 			},
@@ -68,7 +70,7 @@ var (
 
 func ReadAppConfig() error {
 	if !utils.Exist(res.AppConfigPath) {
-		configBytes, err := json.Marshal(DefaultappConfig)
+		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
 		if err != nil {
 			utils.Error("[CONFIG] marshal default app config failed: %v", err)
 			return err

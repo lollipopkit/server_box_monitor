@@ -1,36 +1,67 @@
 package model
 
 import (
+	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/lollipopkit/server_box_monitor/utils"
 )
 
 type Push struct {
-	PushType      `json:"type"`
-	PushIface     any        `json:"iface"`
-	TitleFormat   PushFormat `json:"title"`
-	ContentFormat PushFormat `json:"content"`
+	Type          PushType         `json:"type"`
+	Iface         json.RawMessage `json:"iface"`
+	TitleFormat   PushFormat       `json:"title"`
+	ContentFormat PushFormat       `json:"content"`
+}
+
+func (p *Push) GetIface() (PushIface, error) {
+	switch p.Type {
+	case PushTypeIOS:
+		var iface PushIOS
+		err := json.Unmarshal(p.Iface, &iface)
+		if err != nil {
+			return nil, err
+		}
+		return iface, nil
+	case PushTypeWebhook:
+		var iface PushWebhook
+		err := json.Unmarshal(p.Iface, &iface)
+		if err != nil {
+			return nil, err
+		}
+		return iface, nil
+	}
+	return nil, errors.New("unknown push type")
 }
 
 func (p *Push) Push(args []*PushFormatArgs) error {
 	title := p.TitleFormat.String(args)
 	content := p.ContentFormat.String(args)
-	var iface PushIface
-	switch p.PushType {
-	case PushTypeIOS:
-		iface = p.PushIface.(*PushIOS)
-	case PushTypeWebhook:
-		iface = p.PushIface.(*PushWebhook)
+	iface, err := p.GetIface()
+	if err != nil {
+		return err
 	}
 	return iface.push(title, content)
 }
 func (p *Push) Id() string {
-	switch p.PushType {
-	case PushTypeIOS:
-		return "iOS-" + p.PushIface.(*PushIOS).Token[:7]
-	case PushTypeWebhook:
-		return "Webhook-" + p.PushIface.(*PushWebhook).Url
+	// switch p.PushType {
+	// case PushTypeIOS:
+	// 	return "iOS-" + p.PushIface.(*PushIOS).Token[:7]
+	// case PushTypeWebhook:
+	// 	return "Webhook-" + p.PushIface.(*PushWebhook).Url
+	// default:
+	// 	return "UnknownPushId"
+	// }
+	iface, err := p.GetIface()
+	if err != nil {
+		return "UnknownPushIface"
+	}
+	switch iface.(type) {
+	case PushIOS:
+		return "iOS-" + iface.(PushIOS).Token[:7]
+	case PushWebhook:
+		return "Webhook-" + iface.(PushWebhook).Url
 	default:
 		return "UnknownPushId"
 	}
@@ -69,7 +100,7 @@ type PushIOS struct {
 	Token string `json:"token"`
 }
 
-func (p *PushIOS) push(title, content string) error {
+func (p PushIOS) push(title, content string) error {
 	return nil
 }
 
@@ -79,7 +110,7 @@ type PushWebhook struct {
 	Method  string            `json:"method"`
 }
 
-func (p *PushWebhook) push(title, content string) error {
+func (p PushWebhook) push(title, content string) error {
 	body := strings.Join([]string{title, content}, "\n")
 	switch p.Method {
 	case "GET":
