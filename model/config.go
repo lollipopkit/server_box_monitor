@@ -15,19 +15,12 @@ var (
 
 type AppConfig struct {
 	Version  int `json:"version"`
-	Interval `json:"interval"`
+	// Such as "300ms", "-1.5h" or "2h45m".
+	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+	// Values less than 1 minute are not allowed.
+	Interval string`json:"interval"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
-}
-
-// Such as "300ms", "-1.5h" or "2h45m".
-// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-type Interval struct {
-	// interval for running the script to get status
-	// Values greater than 10 or less than 3 will be ignored
-	Run string `json:"run"`
-	// interval for pushing the status
-	Push string `json:"push"`
 }
 
 func ReadAppConfig() error {
@@ -60,23 +53,22 @@ func ReadAppConfig() error {
 	return err
 }
 
-func (ac *AppConfig) GetRunInterval() time.Duration {
-	d, err := time.ParseDuration(ac.Interval.Run)
+func GetInterval() time.Duration {
+	ac := DefaultappConfig
+	if Config != nil {
+		ac = Config
+	}
+	d, err := time.ParseDuration(ac.Interval)
 	if err == nil {
+		if d < res.DefaultInterval {
+			utils.Warn("[CONFIG] interval is too short, use default interval: 1m")
+			return res.DefaultInterval
+		}
 		return d
 	}
-	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 5s", err)
-	return time.Second * 5
+	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
+	return res.DefaultInterval
 }
-func (ac *AppConfig) GetPushInterval() time.Duration {
-	d, err := time.ParseDuration(ac.Interval.Push)
-	if err == nil {
-		return d
-	}
-	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 5m", err)
-	return time.Minute * 5
-}
-
 
 var (
 	defaultWekhookBody = map[string]interface{}{
@@ -92,7 +84,7 @@ var (
 		Url:  "http://localhost:5700",
 		Headers: map[string]string{
 			"Content-Type":  "application/json",
-			"Auhorization": "Bearer YOUR_SECRET",
+			"Authorization": "Bearer YOUR_SECRET",
 		},
 		Method: "POST",
 		Body: defaultWekhookBodyBytes,
@@ -109,7 +101,7 @@ var (
 
 	DefaultappConfig = &AppConfig{
 		Version:  1,
-		Interval: Interval{Run: "5s", Push: "5m"},
+		Interval: "3m",
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,

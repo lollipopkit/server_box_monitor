@@ -4,6 +4,7 @@ import (
 	"embed"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/lollipopkit/server_box_monitor/utils"
 )
@@ -25,6 +26,10 @@ var (
 
 	AppConfigFileName = "config.json"
 	AppConfigPath     = filepath.Join(ServerBoxDirPath, AppConfigFileName)
+)
+
+const (
+	DefaultInterval = time.Second * 5
 )
 
 func init() {

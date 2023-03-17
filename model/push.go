@@ -37,22 +37,22 @@ func (p *Push) GetIface() (PushIface, error) {
 	return nil, errors.New("unknown push type")
 }
 
-func (p *Push) Push(args []*PushFormatArgs) error {
+func (p *Push) Push(args []*PushPair) error {
 	iface, err := p.GetIface()
 	if err != nil {
 		return err
 	}
 	resp, code, err := iface.push(args)
 	if p.SuccessCode != 0 && code != p.SuccessCode {
-		return fmt.Errorf("[PUSH] failed, code: %d, resp: %s", code, string(resp))
+		return fmt.Errorf("code: %d, resp: %s", code, string(resp))
 	}
 	if p.SuccessBodyRegex != "" {
 		reg, err := regexp.Compile(p.SuccessBodyRegex)
 		if err != nil {
-			return fmt.Errorf("[PUSH] compile regex failed: %s", err.Error())
+			return fmt.Errorf("compile regex failed: %s", err.Error())
 		}
 		if !reg.Match(resp) {
-			return fmt.Errorf("[PUSH] failed, resp: %s", string(resp))
+			return fmt.Errorf("resp: %s", string(resp))
 		}
 	}
 	return nil
@@ -74,12 +74,12 @@ func (p *Push) Id() string {
 
 // {{key}} {{value}}
 type PushFormat string
-type PushFormatArgs struct {
+type PushPair struct {
 	Key   string
 	Value string
 }
 
-func (pf PushFormat) String(args []*PushFormatArgs) string {
+func (pf PushFormat) String(args []*PushPair) string {
 	ss := []string{}
 	for _, arg := range args {
 		s := string(pf)
@@ -98,7 +98,7 @@ const (
 )
 
 type PushIface interface {
-	push([]*PushFormatArgs) ([]byte, int, error)
+	push([]*PushPair) ([]byte, int, error)
 }
 
 type PushIOS struct {
@@ -108,7 +108,7 @@ type PushIOS struct {
 	Content PushFormat `json:"content"`
 }
 
-func (p PushIOS) push(args []*PushFormatArgs) ([]byte, int, error) {
+func (p PushIOS) push(args []*PushPair) ([]byte, int, error) {
 	title := p.Title.String(args)
 	content := p.Content.String(args)
 	func (a,b string){}(title, content)
@@ -123,7 +123,7 @@ type PushWebhook struct {
 	Body json.RawMessage `json:"body"`
 }
 
-func (p PushWebhook) push(args []*PushFormatArgs) ([]byte, int, error) {
+func (p PushWebhook) push(args []*PushPair) ([]byte, int, error) {
 	body := PushFormat(p.Body).String(args)
 	switch p.Method {
 	case "GET":

@@ -108,14 +108,14 @@ func (ns *NetworkStatus) TransmitSpeed() (Size, error) {
 		return 0, ErrNotReady
 	}
 	diff := ns.TimeSequence.New.Transmit - ns.TimeSequence.Old.Transmit
-	return diff / Size(Config.GetRunInterval()), nil
+	return diff / Size(GetInterval()), nil
 }
 func (ns *NetworkStatus) ReceiveSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
 	diff := ns.TimeSequence.New.Receive - ns.TimeSequence.Old.Receive
-	return diff / Size(Config.GetRunInterval()), nil
+	return diff / Size(GetInterval()), nil
 }
 
 func RefreshStatus() error {
