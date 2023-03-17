@@ -2,6 +2,7 @@ package runner
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,15 +12,11 @@ import (
 )
 
 var (
-	pushArgs = []*model.PushFormatArgs{}
+	pushArgs     = []*model.PushFormatArgs{}
 	pushArgsLock = new(sync.RWMutex)
 )
 
 func init() {
-	if utils.Exist(res.ServerBoxShellPath) {
-		return
-	}
-
 	scriptBytes, err := res.Files.ReadFile(res.ServerBoxShellFileName)
 	if err != nil {
 		utils.Error("[INIT] Read embed file error: %v", err)
@@ -57,7 +54,9 @@ func Run() {
 		for _, rule := range model.Config.Rules {
 			notify, arg, err := rule.ShouldNotify(status)
 			if err != nil {
-				utils.Warn("[RULE] %s error: %v", rule.Id(), err)
+				if !strings.Contains(err.Error(), "not ready") {
+					utils.Warn("[RULE] %s error: %v", rule.Id(), err)
+				}
 			}
 
 			if notify && arg != nil {
@@ -84,7 +83,7 @@ func Push() {
 			time.Sleep(model.DefaultappConfig.GetRunInterval())
 			continue
 		}
-		
+
 		for _, push := range model.Config.Pushes {
 			pushArgsLock.RLock()
 			err := push.Push(pushArgs)

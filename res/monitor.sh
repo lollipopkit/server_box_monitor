@@ -3,7 +3,7 @@
 
 export LANG=en_US.utf-8
 echo SrvBox
-cat /proc/net/dev && date +%s
+cat /proc/net/dev
 echo SrvBox
 cat /etc/os-release | grep PRETTY_NAME
 echo SrvBox

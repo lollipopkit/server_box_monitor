@@ -9,10 +9,10 @@ import (
 )
 
 type Push struct {
-	Type          PushType         `json:"type"`
+	Type          PushType        `json:"type"`
 	Iface         json.RawMessage `json:"iface"`
-	TitleFormat   PushFormat       `json:"title"`
-	ContentFormat PushFormat       `json:"content"`
+	TitleFormat   PushFormat      `json:"title"`
+	ContentFormat PushFormat      `json:"content"`
 }
 
 func (p *Push) GetIface() (PushIface, error) {
@@ -45,14 +45,6 @@ func (p *Push) Push(args []*PushFormatArgs) error {
 	return iface.push(title, content)
 }
 func (p *Push) Id() string {
-	// switch p.PushType {
-	// case PushTypeIOS:
-	// 	return "iOS-" + p.PushIface.(*PushIOS).Token[:7]
-	// case PushTypeWebhook:
-	// 	return "Webhook-" + p.PushIface.(*PushWebhook).Url
-	// default:
-	// 	return "UnknownPushId"
-	// }
 	iface, err := p.GetIface()
 	if err != nil {
 		return "UnknownPushIface"

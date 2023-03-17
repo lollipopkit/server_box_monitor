@@ -3,6 +3,8 @@ package model
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -84,11 +86,11 @@ type SwapStatus struct {
 }
 
 type DiskStatus struct {
-	MountPath        string
-	Filesystem	   string
-	Total Size
-	Used Size
-	Avail Size
+	MountPath   string
+	Filesystem  string
+	Total       Size
+	Used        Size
+	Avail       Size
 	UsedPercent float64
 }
 
@@ -117,17 +119,19 @@ func (ns *NetworkStatus) ReceiveSpeed() (Size, error) {
 }
 
 func RefreshStatus() error {
-	stdout, stderr, err := utils.Execute("bash", res.ServerBoxShellPath)
+	output, _ := utils.Execute("bash", res.ServerBoxShellPath)
+	err := os.WriteFile(filepath.Join(res.ServerBoxDirPath, "shell_output.log"), []byte(output), 0644)
 	if err != nil {
-		utils.Warn("run shell failed: %s, %s", err, stderr)
+		utils.Warn("[STATUS] write shell output log failed: %s", err)
 	}
-	return ParseStatus(stdout)
+	return ParseStatus(output)
 }
 
 func ParseStatus(s string) error {
 	segments := strings.Split(s, "SrvBox")
-	for i, segment := range segments {
-		segments[i] = strings.TrimSpace(segment)
+	for i := range segments {
+		segments[i] = strings.TrimSpace(segments[i])
+		segments[i] = strings.Trim(segments[i], "\n")
 	}
 	if len(segments) != 10 {
 		return ErrInvalidShellOutput
@@ -148,11 +152,11 @@ func ParseStatus(s string) error {
 	if err != nil {
 		utils.Warn("parse temperature status failed: %s", err)
 	}
-	err = parseDiskStatus(segments[5])
+	err = parseDiskStatus(segments[6])
 	if err != nil {
 		utils.Warn("parse disk status failed: %s", err)
 	}
-	return ErrRunShellFailed
+	return nil
 }
 
 func initMem() {
@@ -170,54 +174,37 @@ func parseMemAndSwapStatus(s string) error {
 	lines := strings.Split(s, "\n")
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
+
+		value, err := strconv.ParseInt(strings.Fields(line)[1], 10, 64)
+		if err != nil {
+			return err
+		}
+		size := Size(value)
+
 		switch true {
 		case strings.HasPrefix(line, "MemTotal:"):
 			initMem()
-			size, err := ParseToSize(strings.Split(line, " ")[1])
-			if err != nil {
-				return err
-			}
 			status.Mem.Total = size
 			fallthrough
 		case strings.HasPrefix(line, "MemFree:"):
 			initMem()
-			size, err := ParseToSize(strings.Split(line, " ")[1])
-			if err != nil {
-				return err
-			}
 			status.Mem.Free = size
 			status.Mem.Used = status.Mem.Total - status.Mem.Free
 			fallthrough
 		case strings.HasPrefix(line, "MemAvailable:"):
 			initMem()
-			size, err := ParseToSize(strings.Split(line, " ")[1])
-			if err != nil {
-				return err
-			}
 			status.Mem.Avail = size
 		case strings.HasPrefix(line, "SwapTotal:"):
 			initSwap()
-			size, err := ParseToSize(strings.Split(line, " ")[1])
-			if err != nil {
-				return err
-			}
 			status.Swap.Total = size
 			fallthrough
 		case strings.HasPrefix(line, "SwapFree:"):
 			initSwap()
-			size, err := ParseToSize(strings.Split(line, " ")[1])
-			if err != nil {
-				return err
-			}
 			status.Swap.Free = size
 			status.Swap.Used = status.Swap.Total - status.Swap.Free
 			fallthrough
 		case strings.HasPrefix(line, "SwapCached:"):
 			initSwap()
-			size, err := ParseToSize(strings.Split(line, " ")[1])
-			if err != nil {
-				return err
-			}
 			status.Swap.Cached = size
 		}
 	}
@@ -227,7 +214,7 @@ func parseMemAndSwapStatus(s string) error {
 func parseCPUStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
-	if status.CPU == nil || len(status.CPU) != count {
+	if len(status.CPU) != count {
 		status.CPU = make([]CPUStatus, count)
 	}
 	for i := range lines {
@@ -263,18 +250,20 @@ func parseCPUStatus(s string) error {
 }
 
 func parseDiskStatus(s string) error {
-	liens := strings.Split(strings.TrimSpace(s), "\n")
-	count := len(liens)
-	if status.Disk == nil || len(status.Disk) != count {
+	lines := strings.Split(strings.TrimSpace(s), "\n")
+	lines = lines[1:]
+	count := len(lines)
+	if len(status.Disk) != count {
 		status.Disk = make([]DiskStatus, count)
 	}
-	for i := range liens {
-		line := strings.TrimSpace(liens[i])
+	for i := range lines {
+		line := strings.TrimSpace(lines[i])
 		fields := strings.Fields(line)
 		if len(fields) != 6 {
 			return errors.Join(ErrInvalidShellOutput, fmt.Errorf("invalid disk status: %s", line))
 		}
 		status.Disk[i].MountPath = fields[5]
+		status.Disk[i].Filesystem = fields[0]
 		total, err := ParseToSize(fields[1])
 		if err != nil {
 			return err
@@ -305,7 +294,7 @@ func parseTemperatureStatus(s1, s2 string) error {
 		return errors.Join(ErrInvalidShellOutput, fmt.Errorf("invalid temperature status: %s, %s", s1, s2))
 	}
 	count := len(types)
-	if status.Temperature == nil || len(status.Temperature) != count {
+	if len(status.Temperature) != count {
 		status.Temperature = make([]TemperatureStatus, count)
 	}
 	for i := range types {
@@ -322,8 +311,8 @@ func parseTemperatureStatus(s1, s2 string) error {
 func parseNetworkStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
-	if status.Network == nil || len(status.Network) != count - 2 {
-		status.Network = make([]NetworkStatus, count - 2)
+	if len(status.Network) != count-2 {
+		status.Network = make([]NetworkStatus, count-2)
 	}
 	for i := range lines {
 		if i < 2 {

@@ -5,15 +5,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/lollipopkit/server_box_monitor/utils"
 )
 
 var (
 	ErrInvalidRule          = errors.New("invalid rule")
 	ErrInvalidMonitorType   = errors.New("invalid monitor type")
-	ErrInvalidThresholdType = errors.New("invalid threshold type")
-	ErrCompareFailed        = errors.New("compare failed")
 )
 
 type Rule struct {
@@ -34,9 +30,8 @@ type Rule struct {
 	// MonitorType = "temp" && Matcher = "x86_pkg" -> temperature of x86_pkg
 	Matcher string `json:"matcher"`
 }
-
 func (r *Rule) Id() string {
-	return fmt.Sprintf("%s-%s-%s", r.MonitorType, r.Threshold, r.Matcher)
+	return fmt.Sprintf("[%s %s %s]", r.MonitorType, r.Threshold, r.Matcher)
 }
 func (r *Rule) ShouldNotify(s *Status) (bool, *PushFormatArgs, error) {
 	t, err := ParseToThreshold(r.Threshold)
@@ -75,27 +70,31 @@ func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushFormatA
 		}
 		idx = int64(idx_ + 1)
 	}
-	
+
 	if idx < 0 || int(idx) >= len(ss) {
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("cpu index out of range: %d", idx))
 	}
 	s := ss[idx]
 	switch t.ThresholdType {
 	case ThresholdTypePercent:
-		ok, err := t.True(s.UsedPercent)
+		percent, err := s.UsedPercent()
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
+		}
+		ok, err := t.True(percent)
+		if err != nil {
+			return false, nil, err
 		}
 		usedPercent, err := s.UsedPercent()
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   fmt.Sprintf("cpu%d", idx),
 			Value: fmt.Sprintf("%.2f%%", usedPercent),
 		}, nil
 	default:
-		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for cpu: %s", t.ThresholdType.Name()))
 	}
 }
 func (r *Rule) shouldNotifyMemory(s *MemStatus, t *Threshold) (bool, *PushFormatArgs, error) {
@@ -123,7 +122,7 @@ func (r *Rule) shouldNotifyMemory(s *MemStatus, t *Threshold) (bool, *PushFormat
 	case ThresholdTypeSize:
 		ok, err := t.True(size)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher + "of Memory",
@@ -132,14 +131,14 @@ func (r *Rule) shouldNotifyMemory(s *MemStatus, t *Threshold) (bool, *PushFormat
 	case ThresholdTypePercent:
 		ok, err := t.True(percent)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher + "of Memory",
 			Value: fmt.Sprintf("%.2f%%", percent*100),
 		}, nil
 	default:
-		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for memory: %s", t.ThresholdType.Name()))
 	}
 }
 func (r *Rule) shouldNotifySwap(s *SwapStatus, t *Threshold) (bool, *PushFormatArgs, error) {
@@ -164,7 +163,7 @@ func (r *Rule) shouldNotifySwap(s *SwapStatus, t *Threshold) (bool, *PushFormatA
 	case ThresholdTypeSize:
 		ok, err := t.True(size)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher + "of Swap",
@@ -173,14 +172,14 @@ func (r *Rule) shouldNotifySwap(s *SwapStatus, t *Threshold) (bool, *PushFormatA
 	case ThresholdTypePercent:
 		ok, err := t.True(percent)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher + "of Swap",
 			Value: fmt.Sprintf("%.2f%%", percent*100),
 		}, nil
 	default:
-		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for swap: %s", t.ThresholdType.Name()))
 	}
 }
 func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormatArgs, error) {
@@ -205,7 +204,7 @@ func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormat
 	case ThresholdTypeSize:
 		ok, err := t.True(disk.Used)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher,
@@ -214,14 +213,14 @@ func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormat
 	case ThresholdTypePercent:
 		ok, err := t.True(disk.UsedPercent)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher,
 			Value: fmt.Sprintf("%.2f%%", disk.UsedPercent),
 		}, nil
 	default:
-		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for disk: %s", t.ThresholdType.Name()))
 	}
 }
 func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *PushFormatArgs, error) {
@@ -253,32 +252,48 @@ func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *Push
 	}
 
 	switch t.ThresholdType {
-	case ThresholdTypeSize:
+	case ThresholdTypeSpeed:
 		speed := Size(0)
 		if in {
 			s, err := net.ReceiveSpeed()
 			if err != nil {
-				utils.Warn("[NETWORK] get receive speed failed: %s", err)
+				return false, nil, err
 			}
 			speed += s
 		}
 		if out {
 			s, err := net.TransmitSpeed()
 			if err != nil {
-				utils.Warn("[NETWORK] get transmit speed failed: %s", err)
+				return false, nil, err
 			}
 			speed += s
 		}
 		ok, err := t.True(speed)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher,
 			Value: speed.String(),
 		}, nil
+	case ThresholdTypeSize:
+		size := Size(0)
+		if in {
+			size += net.TimeSequence.New.Receive
+		}
+		if out {
+			size += net.TimeSequence.New.Transmit
+		}
+		ok, err := t.True(size)
+		if err != nil {
+			return false, nil, err
+		}
+		return ok, &PushFormatArgs{
+			Key:   r.Matcher,
+			Value: size.String(),
+		}, nil
 	default:
-		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for network: %s", t.ThresholdType.Name()))
 	}
 }
 
@@ -305,14 +320,14 @@ func (r *Rule) shouldNotifyTemperature(s []TemperatureStatus, t *Threshold) (boo
 	case ThresholdTypeSize:
 		ok, err := t.True(temp.Value)
 		if err != nil {
-			return false, nil, errors.Join(ErrInvalidRule, err)
+			return false, nil, err
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher,
 			Value: fmt.Sprintf("%.2f°C", temp.Value),
 		}, nil
 	default:
-		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for temperature: %s", t.ThresholdType.Name()))
 	}
 }
 
