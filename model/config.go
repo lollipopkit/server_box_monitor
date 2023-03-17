@@ -30,59 +30,6 @@ type Interval struct {
 	Push string `json:"push"`
 }
 
-var (
-	DefaultappConfig = &AppConfig{
-		Version:  1,
-		Interval: Interval{Run: "5s", Push: "5m"},
-		Rules: []Rule{
-			{
-				MonitorType: MonitorTypeCPU,
-				Threshold:   ">=77%",
-				Matcher:     "0",
-			},
-			{
-				MonitorType: MonitorTypeNetwork,
-				Threshold:   ">=7.7m/s",
-				Matcher:     "eth0",
-			},
-		},
-		Pushes: []Push{
-			{
-				Type: PushTypeWebhook,
-				Iface: []byte(`{
-					"name": "QQ Group",
-					"url": "http://localhost:5700",
-					"headers": {
-						"Content-Type": "application/json"
-						"Auhtorization": "Bearer YOUR_SECRET"
-					},
-					"method": "POST",
-					"body": {
-						"action": "send_group_msg",
-						"params": {
-							"group_id": 123456789,
-							"message": "ServerBox Notification: {{key}}: {{value}}"
-						}
-					}
-				}`),
-				SuccessBodyRegex: ".*",
-				SuccessCode:      200,
-			},
-			{
-				Type: PushTypeIOS,
-				Iface: []byte(`{
-					"name": "My iPhone",
-					"token": "YOUR_TOKEN",
-					"title": "Server Notification",
-					"content": "{{key}}: {{value}}"
-				}`),
-				SuccessBodyRegex: ".*",
-				SuccessCode:      200,
-			},
-		},
-	}
-)
-
 func ReadAppConfig() error {
 	if !utils.Exist(res.AppConfigPath) {
 		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
@@ -129,3 +76,65 @@ func (ac *AppConfig) GetPushInterval() time.Duration {
 	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 5m", err)
 	return time.Minute * 5
 }
+
+
+var (
+	defaultWekhookBody = map[string]interface{}{
+		"action": "send_group_msg",
+		"params": map[string]interface{}{
+			"group_id": 123456789,
+			"message":  "ServerBox Notification\n{{key}}: {{value}}",
+		},
+	}
+	defaultWekhookBodyBytes, _ = json.Marshal(defaultWekhookBody)
+	defaultWebhookIface = PushWebhook{
+		Name: "QQ Group",
+		Url:  "http://localhost:5700",
+		Headers: map[string]string{
+			"Content-Type":  "application/json",
+			"Auhorization": "Bearer YOUR_SECRET",
+		},
+		Method: "POST",
+		Body: defaultWekhookBodyBytes,
+	}
+	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
+
+	defaultIOSIface = PushIOS{
+		Name: "My iPhone",
+		Token: "YOUR_TOKEN",
+		Title: "Server Notification",
+		Content: "{{key}}: {{value}}",
+	}
+	defaultIOSIfaceBytes, _ = json.Marshal(defaultIOSIface)
+
+	DefaultappConfig = &AppConfig{
+		Version:  1,
+		Interval: Interval{Run: "5s", Push: "5m"},
+		Rules: []Rule{
+			{
+				MonitorType: MonitorTypeCPU,
+				Threshold:   ">=77%",
+				Matcher:     "0",
+			},
+			{
+				MonitorType: MonitorTypeNetwork,
+				Threshold:   ">=7.7m/s",
+				Matcher:     "eth0",
+			},
+		},
+		Pushes: []Push{
+			{
+				Type: PushTypeWebhook,
+				Iface: defaultWebhookIfaceBytes,
+				SuccessBodyRegex: ".*",
+				SuccessCode:      200,
+			},
+			{
+				Type: PushTypeIOS,
+				Iface: defaultIOSIfaceBytes,
+				SuccessBodyRegex: ".*",
+				SuccessCode:      200,
+			},
+		},
+	}
+)

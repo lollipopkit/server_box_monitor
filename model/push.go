@@ -120,7 +120,7 @@ type PushWebhook struct {
 	Url     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
 	Method  string            `json:"method"`
-	Body json.RawMessage `json:"title"`
+	Body json.RawMessage `json:"body"`
 }
 
 func (p PushWebhook) push(args []*PushFormatArgs) ([]byte, int, error) {
