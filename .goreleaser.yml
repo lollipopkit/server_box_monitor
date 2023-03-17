@@ -11,8 +11,6 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
-      - darwin
     goarch:
       - amd64
       - arm
@@ -20,13 +18,6 @@ builds:
     goarm:
       - 6
       - 7
-    ignore:
-      - goos: windows
-        goarch: arm
-        goarm: 6
-      - goos: windows
-        goarch: arm
-        goarm: 7
 
 checksum:
   name_template: 'checksums.txt'
