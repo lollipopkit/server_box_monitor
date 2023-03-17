@@ -18,43 +18,55 @@ type Threshold struct {
 func ParseToThreshold(s string) (*Threshold, error) {
 	s = strings.ToLower(s)
 	runes := []rune(s)
+	runesLen := len(runes)
 
 	var thresholdType ThresholdType
 	var compareType CompareType
-	var idx int
+	var startIdx, endIdx int
 
+	// 判断阈值类型
 	if utils.Contains(runes, '%') {
 		thresholdType = ThresholdTypePercent
+		endIdx = runesLen - 1
 	} else if utils.Contains(sizeSuffix, string(runes[len(runes)-1])) {
 		if strings.HasSuffix(s, "/s") {
 			thresholdType = ThresholdTypeSpeed
+			// 10m/s -> m/s -> 3
+			endIdx = runesLen - 3
 		} else {
+			// 10m -> m -> 1
 			thresholdType = ThresholdTypeSize
+			endIdx = runesLen - 1
 		}
+	} else if strings.HasSuffix(s, "c") {
+		thresholdType = ThresholdTypeTemperature
+		// 32c -> c -> 1
+		endIdx = runesLen - 1
 	}
+
 	runes = runes[:len(runes)-1]
 	if runes[0] == '<' {
 		if runes[1] == '=' {
 			compareType = CompareTypeLessOrEqual
-			idx = 2
+			startIdx = 2
 		} else {
 			compareType = CompareTypeLess
-			idx = 1
+			startIdx = 1
 		}
 	} else if runes[0] == '>' {
 		if runes[1] == '=' {
 			compareType = CompareTypeGreaterOrEqual
-			idx = 2
+			startIdx = 2
 		} else {
 			compareType = CompareTypeGreater
-			idx = 1
+			startIdx = 1
 		}
 	} else if runes[0] == '=' {
 		compareType = CompareTypeEqual
-		idx = 0
+		startIdx = 0
 	}
 
-	value, err := strconv.ParseFloat(string(runes[idx:]), 64)
+	value, err := strconv.ParseFloat(string(runes[startIdx:endIdx]), 64)
 	if err != nil {
 		return nil, err
 	}
@@ -127,4 +139,6 @@ const (
 	ThresholdTypeSize
 	// eg: 10m/s
 	ThresholdTypeSpeed
+	// eg: 32c
+	ThresholdTypeTemperature
 )

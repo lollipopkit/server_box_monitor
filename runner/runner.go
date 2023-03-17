@@ -2,11 +2,17 @@ package runner
 
 import (
 	"os"
+	"sync"
 	"time"
 
 	"github.com/lollipopkit/server_box_monitor/model"
 	"github.com/lollipopkit/server_box_monitor/res"
 	"github.com/lollipopkit/server_box_monitor/utils"
+)
+
+var (
+	pushArgs = []*model.PushFormatArgs{}
+	pushArgsLock = new(sync.RWMutex)
 )
 
 func init() {
@@ -26,47 +32,67 @@ func init() {
 	}
 }
 
+func Start() {
+	go Run()
+	go Push()
+	// 阻塞主线程
+	select {}
+}
+
 func Run() {
 	for {
-		appConfig, err := model.ReadAppConfig()
+		err := model.ReadAppConfig()
 		if err != nil {
 			time.Sleep(model.DefaultappConfig.GetRunInterval())
 			continue
 		}
 
-		args := []*model.PushFormatArgs{}
-		status, err := model.GetStatus()
+		err = model.RefreshStatus()
+		status := model.GetStatus()
 		if err != nil {
 			utils.Warn("[STATUS] Get status error: %v", err)
 			goto SLEEP
 		}
 
-		for _, rule := range appConfig.Rules {
+		for _, rule := range model.Config.Rules {
 			notify, arg, err := rule.ShouldNotify(status)
 			if err != nil {
 				utils.Warn("[RULE] %s error: %v", rule.Id(), err)
 			}
 
 			if notify && arg != nil {
-				args = append(args, arg)
+				pushArgsLock.Lock()
+				pushArgs = append(pushArgs, arg)
+				pushArgsLock.Unlock()
 			}
 		}
 
-		if len(args) == 0 {
+		if len(pushArgs) == 0 {
 			goto SLEEP
 		}
 
-		for _, push := range appConfig.Pushes {
-			err := push.Push(args)
+	SLEEP:
+		time.Sleep(model.Config.GetRunInterval())
+		continue
+	}
+}
+
+func Push() {
+	for {
+		for _, push := range model.Config.Pushes {
+			pushArgsLock.RLock()
+			err := push.Push(pushArgs)
+			pushArgsLock.RUnlock()
 			if err != nil {
 				utils.Warn("[PUSH] %s error: %v", push.Id(), err)
 				continue
 			}
 			utils.Success("[PUSH] %s success", push.Id())
 		}
+		pushArgsLock.Lock()
+		pushArgs = []*model.PushFormatArgs{}
+		pushArgsLock.Unlock()
 
-	SLEEP:
-		time.Sleep(appConfig.GetRunInterval())
-		continue
+		time.Sleep(model.Config.GetPushInterval())
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/lollipopkit/server_box_monitor/utils"
 )
 
 var (
@@ -22,9 +24,12 @@ type Rule struct {
 	// such as "10m/s"
 	// "10m/m" is not allowed
 	Threshold string `json:"threshold"`
-	// eg: "eth0" "cpu0" "sda1" "free"
+	// eg: "eth0-in" "cpu0" "sda1" "free"
 	// "cpu0" -> all CPUs
 	// MonitorType = "mem" && Matcher = "free" -> free of memory
+	// MonitorType = "net" && Matcher = "eth0-in" -> in speed of eth0
+	// MonitorType = "net" && Matcher = "eth0-out-in" -> out + in speed of eth0
+	// MonitorType = "disk" && Matcher = "sda1" -> used percent of sda1
 	Matcher string `json:"matcher"`
 }
 
@@ -47,12 +52,18 @@ func (r *Rule) ShouldNotify(s *Status) (bool, *PushFormatArgs, error) {
 		return r.shouldNotifyDisk(s.Disk, t)
 	case MonitorTypeNetwork:
 		return r.shouldNotifyNetwork(s.Network, t)
+	case MonitorTypeTemperature:
+		return r.shouldNotifyTemperature(s.Temperature, t)
 	default:
 		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidMonitorType)
 	}
 }
 
 func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+	if len(ss) == 0 {
+		// utils.Warn("cpu is not valid, skip this rule")
+		return false, nil, nil
+	}
 	idx, err := strconv.ParseInt(strings.Replace(r.Matcher, "cpu", "", 1), 10, 64)
 	if err != nil {
 		return false, nil, errors.Join(ErrInvalidRule, err)
@@ -75,7 +86,11 @@ func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushFormatA
 		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
 	}
 }
-func (r *Rule) shouldNotifyMemory(s MemStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+func (r *Rule) shouldNotifyMemory(s *MemStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+	if s == nil {
+		// utils.Warn("memory is not valid, skip this rule")
+		return false, nil, nil
+	}
 	var size Size
 	var percent float64
 	switch r.Matcher {
@@ -115,7 +130,11 @@ func (r *Rule) shouldNotifyMemory(s MemStatus, t *Threshold) (bool, *PushFormatA
 		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
 	}
 }
-func (r *Rule) shouldNotifySwap(s SwapStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+func (r *Rule) shouldNotifySwap(s *SwapStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+	if s == nil {
+		// utils.Warn("swap is not valid, skip this rule")
+		return false, nil, nil
+	}
 	var size Size
 	var percent float64
 	switch r.Matcher {
@@ -153,6 +172,10 @@ func (r *Rule) shouldNotifySwap(s SwapStatus, t *Threshold) (bool, *PushFormatAr
 	}
 }
 func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+	if len(s) == 0 {
+		// utils.Warn("disk is not valid, skip this rule")
+		return false, nil, nil
+	}
 	var disk DiskStatus
 	var have bool
 	for _, d := range s {
@@ -190,10 +213,15 @@ func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushFormat
 	}
 }
 func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+	if len(s) == 0 {
+		// utils.Warn("network is not valid, skip this rule")
+		return false, nil, nil
+	}
+
 	var net NetworkStatus
 	var have bool
 	for _, n := range s {
-		if n.Interface == r.Matcher {
+		if strings.Contains(r.Matcher, n.Interface)  {
 			net = n
 			have = true
 			break
@@ -202,15 +230,72 @@ func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *Push
 	if !have {
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("network interface not found: %s", r.Matcher))
 	}
+
+	// 判断是否计算出/入流量
+	in := strings.Contains(r.Matcher, "-in")
+	out := strings.Contains(r.Matcher, "-out")
+	if !in && !out {
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
+	}
+
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
-		ok, err := t.True(net.TransmitSpeed)
+		speed := Size(0)
+		if in {
+			s, err := net.ReceiveSpeed()
+			if err != nil {
+				utils.Warn("[NETWORK] get receive speed failed: %s", err)
+			}
+			speed += s
+		}
+		if out {
+			s, err := net.TransmitSpeed()
+			if err != nil {
+				utils.Warn("[NETWORK] get transmit speed failed: %s", err)
+			}
+			speed += s
+		}
+		ok, err := t.True(speed)
 		if err != nil {
 			return false, nil, errors.Join(ErrInvalidRule, err)
 		}
 		return ok, &PushFormatArgs{
 			Key:   r.Matcher,
-			Value: net.TransmitSpeed.String(),
+			Value: speed.String(),
+		}, nil
+	default:
+		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
+	}
+}
+
+func (r *Rule) shouldNotifyTemperature(s []TemperatureStatus, t *Threshold) (bool, *PushFormatArgs, error) {
+	if len(s) == 0 {
+		// utils.Warn("temperature is not valid, skip this rule")
+		return false, nil, nil
+	}
+
+	var temp TemperatureStatus
+	var have bool
+	for _, t := range s {
+		if strings.Contains(t.Name, r.Matcher) {
+			temp = t
+			have = true
+			break
+		}
+	}
+	if !have {
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("temperature not found: %s", r.Matcher))
+	}
+
+	switch t.ThresholdType {
+	case ThresholdTypeSize:
+		ok, err := t.True(temp.Value)
+		if err != nil {
+			return false, nil, errors.Join(ErrInvalidRule, err)
+		}
+		return ok, &PushFormatArgs{
+			Key:   r.Matcher,
+			Value: fmt.Sprintf("%.2f°C", temp.Value),
 		}, nil
 	default:
 		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidThresholdType)
@@ -224,5 +309,6 @@ const (
 	MonitorTypeMemory              = "mem"
 	MonitorTypeSwap                = "swap"
 	MonitorTypeDisk                = "disk"
-	MonitorTypeNetwork             = "network"
+	MonitorTypeNetwork             = "net"
+	MonitorTypeTemperature         = "temp"
 )

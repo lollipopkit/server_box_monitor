@@ -9,19 +9,31 @@ import (
 	"github.com/lollipopkit/server_box_monitor/utils"
 )
 
+var (
+	Config = &AppConfig{}
+)
+
 type AppConfig struct {
-	// such as "300ms", "-1.5h" or "2h45m".
-	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-	Interval string `json:"interval"`
+	Version int   `json:"version"`
+	Interval `json:"interval"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
-	Version int   `json:"version"`
+}
+
+// Such as "300ms", "-1.5h" or "2h45m".
+// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+type Interval struct {
+	// interval for running the script to get status
+	// Values greater than 10 or less than 3 will be ignored
+	Run string `json:"run"`
+	// interval for pushing the status
+	Push string `json:"push"`
 }
 
 var (
 	DefaultappConfig = &AppConfig{
 		Version: 1,
-		Interval: "3m",
+		Interval: Interval{Run: "5s", Push: "5m"},
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,
@@ -54,41 +66,49 @@ var (
 	}
 )
 
-func ReadAppConfig() (*AppConfig, error) {
+func ReadAppConfig() error {
 	if !utils.Exist(res.AppConfigPath) {
 		configBytes, err := json.Marshal(DefaultappConfig)
 		if err != nil {
 			utils.Error("[CONFIG] marshal default app config failed: %v", err)
-			return nil, err
+			return err
 		}
 		err = os.WriteFile(res.AppConfigPath, configBytes, 0644)
 		if err != nil {
 			utils.Error("[CONFIG] write default app config failed: %v", err)
-			return nil, err
+			return err
 		}
-		return DefaultappConfig, nil
+		Config = DefaultappConfig
+		return nil
 	}
 
-	appConfig := &AppConfig{}
 	configBytes, err := os.ReadFile(res.AppConfigPath)
 	if err != nil {
 		utils.Error("[CONFIG] read app config failed: %v", err)
-		return nil, err
+		return err
 	}
-	err = json.Unmarshal(configBytes, appConfig)
+	err = json.Unmarshal(configBytes, Config)
 	if err != nil {
 		utils.Error("[CONFIG] unmarshal app config failed: %v", err)
-	} else if appConfig.Version < DefaultappConfig.Version {
+	} else if Config.Version < DefaultappConfig.Version {
 		utils.Warn("[CONFIG] app config version is too old, please update it")
 	}
-	return appConfig, err
+	return err
 }
 
 func (ac *AppConfig) GetRunInterval() time.Duration {
-	d, err := time.ParseDuration(ac.Interval)
+	d, err := time.ParseDuration(ac.Interval.Run)
 	if err == nil {
 		return d
 	}
-	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 3m", err)
-	return time.Minute * 3
+	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 5s", err)
+	return time.Second * 5
+}
+func (ac *AppConfig) GetPushInterval() time.Duration {
+	d, err := time.ParseDuration(ac.Interval.Push)
+	if err == nil {
+		return d
+	}
+	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 5m", err)
+	return time.Minute * 5
 }

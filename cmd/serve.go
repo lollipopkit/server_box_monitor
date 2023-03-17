@@ -15,6 +15,6 @@ func init() {
 }
 
 func handleServe(ctx *cli.Context) error {
-	runner.Run()
+	runner.Start()
 	return nil
 }
