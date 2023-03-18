@@ -9,7 +9,6 @@ import (
 
 var (
 	ErrInvalidRule        = errors.New("invalid rule")
-	ErrInvalidMonitorType = errors.New("invalid monitor type")
 )
 
 type Rule struct {
@@ -53,7 +52,7 @@ func (r *Rule) ShouldNotify(s *Status) (bool, *PushPair, error) {
 	case MonitorTypeTemperature:
 		return r.shouldNotifyTemperature(s.Temperature, t)
 	default:
-		return false, nil, errors.Join(ErrInvalidRule, ErrInvalidMonitorType)
+		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid monitor type: %s", r.MonitorType))
 	}
 }
 
@@ -63,6 +62,9 @@ func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushPair, e
 		return false, nil, nil
 	}
 	// 默认获取所有cpu
+	// cpu -> idx = 0 （默认）
+	// cpu0 -> idx = 1
+	// idx = CPU序号 + 1
 	var idx int64 = 0
 	if r.Matcher != "" && r.Matcher != "cpu" {
 		idx_, err := strconv.ParseUint(strings.Replace(r.Matcher, "cpu", "", 1), 10, 64)
@@ -90,8 +92,12 @@ func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushPair, e
 		if err != nil {
 			return false, nil, err
 		}
+		key := "cpu"
+		if idx > 0 {
+			key = fmt.Sprintf("cpu%d", idx - 1)
+		}
 		return ok, &PushPair{
-			Key:   fmt.Sprintf("cpu%d", idx),
+			Key:   key,
 			Value: fmt.Sprintf("%.2f%%", usedPercent),
 		}, nil
 	default:

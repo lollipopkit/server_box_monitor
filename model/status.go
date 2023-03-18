@@ -179,7 +179,9 @@ func parseMemAndSwapStatus(s string) error {
 		if err != nil {
 			return err
 		}
-		size := Size(value)
+		// KB -> B
+		// because the unit of MemTotal/... is KB
+		size := Size(value) * Size(programKilo)
 
 		switch true {
 		case strings.HasPrefix(line, "MemTotal:"):
