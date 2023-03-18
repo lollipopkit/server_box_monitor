@@ -107,15 +107,15 @@ func (ns *NetworkStatus) TransmitSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
-	diff := ns.TimeSequence.New.Transmit - ns.TimeSequence.Old.Transmit
-	return diff / Size(GetInterval()), nil
+	diff := float64(ns.TimeSequence.New.Transmit - ns.TimeSequence.Old.Transmit)
+	return Size(diff / GetIntervalInSeconds()), nil
 }
 func (ns *NetworkStatus) ReceiveSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
-	diff := ns.TimeSequence.New.Receive - ns.TimeSequence.Old.Receive
-	return diff / Size(GetInterval()), nil
+	diff := float64(ns.TimeSequence.New.Receive - ns.TimeSequence.Old.Receive)
+	return Size(diff / GetIntervalInSeconds()), nil
 }
 
 func RefreshStatus() error {

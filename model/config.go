@@ -70,6 +70,10 @@ func GetInterval() time.Duration {
 	return res.DefaultInterval
 }
 
+func GetIntervalInSeconds() float64 {
+	return GetInterval().Seconds()
+}
+
 var (
 	defaultWekhookBody = map[string]interface{}{
 		"action": "send_group_msg",
