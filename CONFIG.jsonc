@@ -108,6 +108,7 @@
         {
             "type": "ios",
             "iface": {
+                "name": "ServerBox iOS App",
                 // You can get it from settings page of ServerBox iOS app
                 "token": "YOUR_TOKEN",
                 // {{key}} and {{value}} will be replaced with the key and value of the check
@@ -119,6 +120,18 @@
             // If the response body matches the regex, the push is considered successful
             "body_regex": ".*",
             // If the response code equals, the push is considered successful
+            "code": 200
+        },
+        {
+            "type": "server_chan",
+            "iface": {
+                "name": "ServerChan",
+                // Details please refer to https://sct.ftqq.com/
+                "sckey": "YOUR_SCKEY",
+                "title": "Server Notification",
+                "desp": "{{key}}: {{value}}"
+            },
+            "body_regex": ".*",
             "code": 200
         }
     ]

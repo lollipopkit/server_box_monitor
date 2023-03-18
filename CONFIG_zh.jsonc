@@ -106,11 +106,26 @@
         {
             "type": "ios",
             "iface": {
+                "name": "ServerBox iOS App",
                 // 你可以从 ServerBox iOS app 的 设置 中获取 token
                 "token": "YOUR_TOKEN",
                 "title": "Server Notification",
                 "body": "{{key}}: {{value}}"
-            }
+            },
+            "body_regex": ".*",
+            "code": 200
+        },
+        {
+            "type": "server_chan",
+            "iface": {
+                "name": "Server酱",
+                // 具体配置请参考 https://sct.ftqq.com/
+                "sckey": "YOUR_SCKEY",
+                "title": "Server Notification",
+                "desp": "{{key}}: {{value}}"
+            },
+            "body_regex": ".*",
+            "code": 200
         }
     ]
 }

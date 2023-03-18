@@ -3,3 +3,4 @@
 - [ ] 支持 `Docker`
 - [ ] 添加 `Web UI`
 - [ ] 支持 `Firebase` 推送
+- [x] 支持 `Server酱` 推送
