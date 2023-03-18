@@ -1,17 +1,11 @@
-# Script for app `ServerBox`
-# Delete this file while app is running will cause app crash
+# Script for `ServerBoxMonitor`
+# Please do not edit it
 
 export LANG=en_US.utf-8
 echo SrvBox
 cat /proc/net/dev
 echo SrvBox
-cat /etc/os-release | grep PRETTY_NAME
-echo SrvBox
 cat /proc/stat | grep cpu
-echo SrvBox
-uptime
-echo SrvBox
-cat /proc/net/snmp
 echo SrvBox
 df -h
 echo SrvBox

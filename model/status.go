@@ -140,21 +140,21 @@ func ParseStatus(s string) error {
 	if err != nil {
 		utils.Warn("parse network status failed: %s", err)
 	}
-	err = parseCPUStatus(segments[3])
+	err = parseCPUStatus(segments[2])
 	if err != nil {
 		utils.Warn("parse cpu status failed: %s", err)
 	}
-	err = parseMemAndSwapStatus(segments[7])
+	err = parseDiskStatus(segments[3])
+	if err != nil {
+		utils.Warn("parse disk status failed: %s", err)
+	}
+	err = parseMemAndSwapStatus(segments[4])
 	if err != nil {
 		utils.Warn("parse mem status failed: %s", err)
 	}
-	err = parseTemperatureStatus(segments[8], segments[9])
+	err = parseTemperatureStatus(segments[5], segments[6])
 	if err != nil {
 		utils.Warn("parse temperature status failed: %s", err)
-	}
-	err = parseDiskStatus(segments[6])
-	if err != nil {
-		utils.Warn("parse disk status failed: %s", err)
 	}
 	return nil
 }
