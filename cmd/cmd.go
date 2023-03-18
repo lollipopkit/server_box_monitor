@@ -16,7 +16,7 @@ var (
 func Run() {
 	app := &cli.App{
 		Name:     res.APP_NAME,
-		Usage:    "Server Box Monitor",
+		Usage:    "a Monitor runs on server",
 		Version:  res.APP_VERSION,
 		Commands: cmds,
 		Flags:    flags,
@@ -32,8 +32,4 @@ func Run() {
 	if err := app.Run(os.Args); err != nil {
 		utils.Error(err.Error())
 	}
-}
-
-func handlePlaceHolder(ctx *cli.Context) error {
-	return nil
 }

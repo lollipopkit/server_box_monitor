@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrInvalidRule        = errors.New("invalid rule")
+	ErrInvalidRule = errors.New("invalid rule")
 )
 
 type Rule struct {
@@ -94,7 +94,7 @@ func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushPair, e
 		}
 		key := "cpu"
 		if idx > 0 {
-			key = fmt.Sprintf("cpu%d", idx - 1)
+			key = fmt.Sprintf("cpu%d", idx-1)
 		}
 		return ok, &PushPair{
 			Key:   key,

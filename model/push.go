@@ -88,7 +88,7 @@ type PushPair struct {
 	Value string
 }
 
-func (pf PushFormat) String(args []*PushPair) string {
+func (pf PushFormat) Format(args []*PushPair) string {
 	ss := []string{}
 	for _, arg := range args {
 		s := string(pf)
@@ -119,8 +119,8 @@ type PushIfaceIOS struct {
 }
 
 func (p PushIfaceIOS) push(args []*PushPair) ([]byte, int, error) {
-	title := p.Title.String(args)
-	content := p.Content.String(args)
+	title := p.Title.Format(args)
+	content := p.Content.Format(args)
 	body := map[string]string{
 		"token":   p.Token,
 		"title":   title,
@@ -136,7 +136,7 @@ func (p PushIfaceIOS) push(args []*PushPair) ([]byte, int, error) {
 		string(bodyBytes),
 		map[string]string{
 			"Content-Type": "application/json",
-			"App":          "ServerBoxMonitor",
+			"AppID":        "com.lollipopkit.toolbox",
 		},
 	)
 }
@@ -150,7 +150,7 @@ type PushIfaceWebhook struct {
 }
 
 func (p PushIfaceWebhook) push(args []*PushPair) ([]byte, int, error) {
-	body := PushFormat(p.Body).String(args)
+	body := PushFormat(p.Body).Format(args)
 	switch p.Method {
 	case "GET":
 		return utils.HttpDo("GET", p.Url, body, p.Headers)
@@ -161,15 +161,15 @@ func (p PushIfaceWebhook) push(args []*PushPair) ([]byte, int, error) {
 }
 
 type PushIfaceServerChan struct {
-	Name string     `json:"name"`
+	Name  string     `json:"name"`
 	SCKEY string     `json:"sckey"`
 	Title PushFormat `json:"title"`
 	Desp  PushFormat `json:"desp"`
 }
 
 func (p PushIfaceServerChan) push(args []*PushPair) ([]byte, int, error) {
-	title := p.Title.String(args)
-	desp := p.Desp.String(args)
+	title := p.Title.Format(args)
+	desp := p.Desp.Format(args)
 	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKEY, title, desp)
 	return utils.HttpDo(
 		"GET",

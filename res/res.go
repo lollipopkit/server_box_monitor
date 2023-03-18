@@ -16,7 +16,7 @@ var (
 
 const (
 	APP_NAME    = "ServerBoxMonitor"
-	APP_VERSION = "0.0.1"
+	APP_VERSION = "0.0.4"
 )
 
 var (
