@@ -20,14 +20,21 @@ type Push struct {
 func (p *Push) GetIface() (PushIface, error) {
 	switch p.Type {
 	case PushTypeIOS:
-		var iface PushIOS
+		var iface PushIfaceIOS
 		err := json.Unmarshal(p.Iface, &iface)
 		if err != nil {
 			return nil, err
 		}
 		return iface, nil
 	case PushTypeWebhook:
-		var iface PushWebhook
+		var iface PushIfaceWebhook
+		err := json.Unmarshal(p.Iface, &iface)
+		if err != nil {
+			return nil, err
+		}
+		return iface, nil
+	case PushTypeServerChan:
+		var iface PushIfaceServerChan
 		err := json.Unmarshal(p.Iface, &iface)
 		if err != nil {
 			return nil, err
@@ -63,10 +70,12 @@ func (p *Push) Id() string {
 		return "UnknownPushIface"
 	}
 	switch iface.(type) {
-	case PushIOS:
-		return iface.(PushIOS).Name
-	case PushWebhook:
-		return iface.(PushWebhook).Name
+	case PushIfaceIOS:
+		return iface.(PushIfaceIOS).Name
+	case PushIfaceWebhook:
+		return iface.(PushIfaceWebhook).Name
+	case PushIfaceServerChan:
+		return iface.(PushIfaceServerChan).Name
 	default:
 		return fmt.Sprintf("UnknownPushId%v", iface)
 	}
@@ -93,22 +102,23 @@ func (pf PushFormat) String(args []*PushPair) string {
 type PushType string
 
 const (
-	PushTypeIOS     PushType = "ios"
-	PushTypeWebhook          = "webhook"
+	PushTypeIOS        PushType = "ios"
+	PushTypeWebhook             = "webhook"
+	PushTypeServerChan          = "server_chan"
 )
 
 type PushIface interface {
 	push([]*PushPair) ([]byte, int, error)
 }
 
-type PushIOS struct {
+type PushIfaceIOS struct {
 	Name    string     `json:"name"`
 	Token   string     `json:"token"`
 	Title   PushFormat `json:"title"`
 	Content PushFormat `json:"content"`
 }
 
-func (p PushIOS) push(args []*PushPair) ([]byte, int, error) {
+func (p PushIfaceIOS) push(args []*PushPair) ([]byte, int, error) {
 	title := p.Title.String(args)
 	content := p.Content.String(args)
 	body := map[string]string{
@@ -131,7 +141,7 @@ func (p PushIOS) push(args []*PushPair) ([]byte, int, error) {
 	)
 }
 
-type PushWebhook struct {
+type PushIfaceWebhook struct {
 	Name    string            `json:"name"`
 	Url     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
@@ -139,7 +149,7 @@ type PushWebhook struct {
 	Body    json.RawMessage   `json:"body"`
 }
 
-func (p PushWebhook) push(args []*PushPair) ([]byte, int, error) {
+func (p PushIfaceWebhook) push(args []*PushPair) ([]byte, int, error) {
 	body := PushFormat(p.Body).String(args)
 	switch p.Method {
 	case "GET":
@@ -148,4 +158,23 @@ func (p PushWebhook) push(args []*PushPair) ([]byte, int, error) {
 		return utils.HttpDo("POST", p.Url, body, p.Headers)
 	}
 	return nil, 0, fmt.Errorf("unknown method: %s", p.Method)
+}
+
+type PushIfaceServerChan struct {
+	Name string     `json:"name"`
+	SCKEY string     `json:"sckey"`
+	Title PushFormat `json:"title"`
+	Desp  PushFormat `json:"desp"`
+}
+
+func (p PushIfaceServerChan) push(args []*PushPair) ([]byte, int, error) {
+	title := p.Title.String(args)
+	desp := p.Desp.String(args)
+	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKEY, title, desp)
+	return utils.HttpDo(
+		"GET",
+		url,
+		"",
+		nil,
+	)
 }

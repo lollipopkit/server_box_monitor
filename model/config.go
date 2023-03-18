@@ -79,7 +79,7 @@ var (
 		},
 	}
 	defaultWekhookBodyBytes, _ = json.Marshal(defaultWekhookBody)
-	defaultWebhookIface        = PushWebhook{
+	defaultWebhookIface        = PushIfaceWebhook{
 		Name: "QQ Group",
 		Url:  "http://localhost:5700",
 		Headers: map[string]string{
@@ -91,7 +91,7 @@ var (
 	}
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
 
-	defaultIOSIface = PushIOS{
+	defaultIOSIface = PushIfaceIOS{
 		Name:    "My iPhone",
 		Token:   "YOUR_TOKEN",
 		Title:   "Server Notification",
