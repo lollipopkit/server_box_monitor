@@ -27,13 +27,45 @@
     "rules": [
         {
             "type": "cpu",
-            "threshold": ">=0.1%",
+            "threshold": ">=77.7%",
+            // "" / "cpu" -> all cpus, in this case, you can omit attribute "matcher"
+            // "X" / "cpuX" -> NO.X cpu
             "matcher": "0"
         },
         {
             "type": "net",
+            // speed only support per second
             "threshold": ">=7.7m/s",
+            // network interface name
             "matcher": "eth0"
+        },
+        {
+            "type": "temp",
+            // temperature only support celsius
+            "threshold": ">=37.7c",
+            // you can run `cat /sys/class/thermal/thermal_zone*/type` to get all thermal types
+            "matcher": "x86_pkg_temp"
+        },
+        {
+            "type": "disk",
+            "threshold": ">=77.7%",
+            // mount point or filesystem
+            // you can use `df -h` to get all valid matchers
+            "matcher": "/dev/sda1"
+        },
+        {
+            "type": "mem",
+            // support: size, percent
+            "threshold": "<=17.7%",
+            // support: free, used, avail
+            "matcher": "free"
+        },
+        {
+            "type": "swap",
+            // support: size, percent
+            "threshold": ">=37.7%",
+            // support: free, used
+            "matcher": "used"
         }
     ],
     // Push rules
@@ -76,7 +108,7 @@
         {
             "type": "ios",
             "iface": {
-                // You can get it from ServerBox iOS app
+                // You can get it from settings page of ServerBox iOS app
                 "token": "YOUR_TOKEN",
                 // {{key}} and {{value}} will be replaced with the key and value of the check
                 "title": "Server Notification",

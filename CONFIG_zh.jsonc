@@ -25,13 +25,45 @@
     "rules": [
         {
             "type": "cpu",
-            "threshold": ">=0.1%",
+            "threshold": ">=77.7%",
+            // "" / "cpu" -> 所有CPU, 这种情况下, 你可以省略该规则的 "matcher" 属性
+            // "X" / "cpuX" -> 第X个CPU
             "matcher": "0"
         },
         {
             "type": "net",
+            // 速度仅支持以秒为单位
             "threshold": ">=7.7m/s",
+            // 网络接口名
             "matcher": "eth0"
+        },
+        {
+            "type": "temp",
+            // 温度仅支持摄氏度
+            "threshold": ">=37.7c",
+            // 你可以运行 `cat /sys/class/thermal/thermal_zone*/type` 来获取所有的温度类型
+            "matcher": "x86_pkg_temp"
+        },
+        {
+            "type": "disk",
+            "threshold": ">=77.7%",
+            // 挂载点或文件系统
+            // 你可以使用 `df -h` 来获取所有有效的匹配器
+            "matcher": "/dev/sda1"
+        },
+        {
+            "type": "mem",
+            // 支持: 大小, 百分比
+            "threshold": "<=17.7%",
+            // 支持: free, used, avail
+            "matcher": "free"
+        },
+        {
+            "type": "swap",
+            // 支持: 大小, 百分比
+            "threshold": ">=37.7%",
+            // 支持: free, used
+            "matcher": "used"
         }
     ],
     // 推送规则
@@ -74,7 +106,7 @@
         {
             "type": "ios",
             "iface": {
-                // 你可以从 ServerBox app 获取 token
+                // 你可以从 ServerBox iOS app 的 设置 中获取 token
                 "token": "YOUR_TOKEN",
                 "title": "Server Notification",
                 "body": "{{key}}: {{value}}"
