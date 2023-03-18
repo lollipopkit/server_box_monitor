@@ -10,7 +10,7 @@
     - 如果你没有安装 `go`, 你可以从 [发布](https://github.com/lollipopkit/server_box_monitor/releases) 下载二进制文件
 2. 编辑配置文件
     - 配置文件保存在 `~/.server_box/config.json`
-    - 完整的配置示例 [在这里](CONFIG_zh.jsonc)
+    - 完整的配置示例 [在这里](doc/CONFIG_zh.jsonc)
 3. 执行 `server_box_monitor` 来运行
     - 如果你是下载的二进制, 你需要执行 `./server_box_monitor`
 

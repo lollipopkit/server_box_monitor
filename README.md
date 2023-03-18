@@ -10,7 +10,7 @@ It is a part of [ServerBox](https://github.com/lollipopkit/flutter_server_box) p
     - If you don't have `go` installed, you can download the binary from [release page](https://github.com/lollipopkit/server_box_monitor/releases)
 2. Edit the config file.
     - The config file is located at `~/.server_box/config.json`
-    - Fully example is [here](CONFIG.jsonc)
+    - Fully example is [here](doc/CONFIG.jsonc)
 3. Run the app with `server_box_monitor` command.
     - If you download the binary, you can run `./server_box_monitor`
 
