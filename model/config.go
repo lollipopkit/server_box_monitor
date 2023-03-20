@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/lollipopkit/server_box_monitor/res"
-	"github.com/lollipopkit/server_box_monitor/utils"
+	"github.com/lollipopkit/gommon/util"
+	"github.com/lollipopkit/gommon/logger"
 )
 
 var (
@@ -24,15 +25,15 @@ type AppConfig struct {
 }
 
 func ReadAppConfig() error {
-	if !utils.Exist(res.AppConfigPath) {
+	if !util.Exist(res.AppConfigPath) {
 		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
 		if err != nil {
-			utils.Error("[CONFIG] marshal default app config failed: %v", err)
+			logger.Err("[CONFIG] marshal default app config failed: %v", err)
 			return err
 		}
 		err = os.WriteFile(res.AppConfigPath, configBytes, 0644)
 		if err != nil {
-			utils.Error("[CONFIG] write default app config failed: %v", err)
+			logger.Err("[CONFIG] write default app config failed: %v", err)
 			return err
 		}
 		Config = DefaultappConfig
@@ -41,14 +42,14 @@ func ReadAppConfig() error {
 
 	configBytes, err := os.ReadFile(res.AppConfigPath)
 	if err != nil {
-		utils.Error("[CONFIG] read app config failed: %v", err)
+		logger.Err("[CONFIG] read app config failed: %v", err)
 		return err
 	}
 	err = json.Unmarshal(configBytes, Config)
 	if err != nil {
-		utils.Error("[CONFIG] unmarshal app config failed: %v", err)
+		logger.Err("[CONFIG] unmarshal app config failed: %v", err)
 	} else if Config.Version < DefaultappConfig.Version {
-		utils.Warn("[CONFIG] app config version is too old, please update it")
+		logger.Warn("[CONFIG] app config version is too old, please update it")
 	}
 	return err
 }
@@ -61,12 +62,12 @@ func GetInterval() time.Duration {
 	d, err := time.ParseDuration(ac.Interval)
 	if err == nil {
 		if d < res.DefaultInterval {
-			utils.Warn("[CONFIG] interval is too short, use default interval: 1m")
+			logger.Warn("[CONFIG] interval is too short, use default interval: 1m")
 			return res.DefaultInterval
 		}
 		return d
 	}
-	utils.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
+	logger.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
 	return res.DefaultInterval
 }
 

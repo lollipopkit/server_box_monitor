@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lollipopkit/server_box_monitor/utils"
+	"github.com/lollipopkit/gommon/util"
 )
 
 type Push struct {
@@ -130,7 +130,7 @@ func (p PushIfaceIOS) push(args []*PushPair) ([]byte, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	return utils.HttpDo(
+	return util.HttpDo(
 		"POST",
 		"https://push.lolli.tech/v1/ios",
 		string(bodyBytes),
@@ -153,9 +153,9 @@ func (p PushIfaceWebhook) push(args []*PushPair) ([]byte, int, error) {
 	body := PushFormat(p.Body).Format(args)
 	switch p.Method {
 	case "GET":
-		return utils.HttpDo("GET", p.Url, body, p.Headers)
+		return util.HttpDo("GET", p.Url, body, p.Headers)
 	case "POST":
-		return utils.HttpDo("POST", p.Url, body, p.Headers)
+		return util.HttpDo("POST", p.Url, body, p.Headers)
 	}
 	return nil, 0, fmt.Errorf("unknown method: %s", p.Method)
 }
@@ -171,7 +171,7 @@ func (p PushIfaceServerChan) push(args []*PushPair) ([]byte, int, error) {
 	title := p.Title.Format(args)
 	desp := p.Desp.Format(args)
 	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKEY, title, desp)
-	return utils.HttpDo(
+	return util.HttpDo(
 		"GET",
 		url,
 		"",

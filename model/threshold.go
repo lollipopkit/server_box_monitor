@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lollipopkit/server_box_monitor/utils"
+	"github.com/lollipopkit/gommon/util"
 )
 
 type Threshold struct {
@@ -26,7 +26,7 @@ func ParseToThreshold(s string) (*Threshold, error) {
 
 	// 判断阈值类型
 
-	if utils.Contains(runes, '%') { // 10%
+	if strings.Contains(s, "%") { // 10%
 		thresholdType = ThresholdTypePercent
 		endIdx = runesLen - 1
 
@@ -35,7 +35,7 @@ func ParseToThreshold(s string) (*Threshold, error) {
 		// 10m/s -> m/s -> 3
 		endIdx = runesLen - 3
 
-	} else if utils.Contains(sizeSuffix, string(runes[runesLen-1])) { // 10m
+	} else if util.Contains(sizeSuffix, string(runes[runesLen-1])) { // 10m
 		// 10m -> m -> 1
 		thresholdType = ThresholdTypeSize
 		endIdx = runesLen - 1

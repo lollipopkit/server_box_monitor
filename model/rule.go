@@ -56,7 +56,7 @@ func (r *Rule) ShouldNotify(s *Status) (bool, *PushPair, error) {
 	}
 }
 
-func (r *Rule) shouldNotifyCPU(ss []CPUStatus, t *Threshold) (bool, *PushPair, error) {
+func (r *Rule) shouldNotifyCPU(ss []OneCpuStatus, t *Threshold) (bool, *PushPair, error) {
 	if len(ss) == 0 {
 		// utils.Warn("cpu is not valid, skip this rule")
 		return false, nil, nil

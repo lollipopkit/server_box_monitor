@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/lollipopkit/server_box_monitor/res"
-	"github.com/lollipopkit/server_box_monitor/utils"
+	"github.com/lollipopkit/gommon/logger"
 	"github.com/urfave/cli/v2"
 )
 
@@ -30,6 +30,6 @@ func Run() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		utils.Error(err.Error())
+		logger.Err(err.Error())
 	}
 }

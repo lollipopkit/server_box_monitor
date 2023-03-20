@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/gommon/util"
 	"github.com/lollipopkit/server_box_monitor/res"
-	"github.com/lollipopkit/server_box_monitor/utils"
 )
 
 var (
@@ -27,7 +28,7 @@ func GetStatus() *Status {
 }
 
 type Status struct {
-	CPU         []CPUStatus
+	CPU         []OneCpuStatus
 	Mem         *MemStatus
 	Swap        *SwapStatus
 	Disk        []DiskStatus
@@ -40,26 +41,17 @@ type TemperatureStatus struct {
 	Name  string
 }
 
-type TimeSequence[T CPUOneTimeStatus | NetworkOneTimeStatus] struct {
-	Old *T
-	New *T
-}
-
-func (ts *TimeSequence[T]) Update(t *T) {
-	ts.Old = ts.New
-	ts.New = t
-}
-
-type CPUOneTimeStatus struct {
+type CpuOneTimeStatus struct {
 	Used  int
 	Total int
 }
-type CPUStatus struct {
+
+type OneCpuStatus struct {
 	Core int
-	TimeSequence[CPUOneTimeStatus]
+	TimeSequence[CpuOneTimeStatus]
 }
 
-func (cs *CPUStatus) UsedPercent() (float64, error) {
+func (cs *OneCpuStatus) UsedPercent() (float64, error) {
 	if cs.TimeSequence.New == nil || cs.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
@@ -119,10 +111,10 @@ func (ns *NetworkStatus) ReceiveSpeed() (Size, error) {
 }
 
 func RefreshStatus() error {
-	output, _ := utils.Execute("bash", res.ServerBoxShellPath)
+	output, _ := util.Execute("bash", res.ServerBoxShellPath)
 	err := os.WriteFile(filepath.Join(res.ServerBoxDirPath, "shell_output.log"), []byte(output), 0644)
 	if err != nil {
-		utils.Warn("[STATUS] write shell output log failed: %s", err)
+		logger.Warn("[STATUS] write shell output log failed: %s", err)
 	}
 	return ParseStatus(output)
 }
@@ -138,23 +130,23 @@ func ParseStatus(s string) error {
 	}
 	err := parseNetworkStatus(segments[1])
 	if err != nil {
-		utils.Warn("parse network status failed: %s", err)
+		logger.Warn("parse network status failed: %s", err)
 	}
 	err = parseCPUStatus(segments[2])
 	if err != nil {
-		utils.Warn("parse cpu status failed: %s", err)
+		logger.Warn("parse cpu status failed: %s", err)
 	}
 	err = parseDiskStatus(segments[3])
 	if err != nil {
-		utils.Warn("parse disk status failed: %s", err)
+		logger.Warn("parse disk status failed: %s", err)
 	}
 	err = parseMemAndSwapStatus(segments[4])
 	if err != nil {
-		utils.Warn("parse mem status failed: %s", err)
+		logger.Warn("parse mem status failed: %s", err)
 	}
 	err = parseTemperatureStatus(segments[5], segments[6])
 	if err != nil {
-		utils.Warn("parse temperature status failed: %s", err)
+		logger.Warn("parse temperature status failed: %s", err)
 	}
 	return nil
 }
@@ -217,7 +209,7 @@ func parseCPUStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
 	if len(status.CPU) != count {
-		status.CPU = make([]CPUStatus, count)
+		status.CPU = make([]OneCpuStatus, count)
 	}
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
@@ -242,7 +234,7 @@ func parseCPUStatus(s string) error {
 				}
 				total += v
 			}
-			status.CPU[i].TimeSequence.Update(&CPUOneTimeStatus{
+			status.CPU[i].TimeSequence.Update(&CpuOneTimeStatus{
 				Used:  user + sys,
 				Total: total,
 			})

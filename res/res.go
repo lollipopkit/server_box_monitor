@@ -6,7 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/lollipopkit/server_box_monitor/utils"
+	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/gommon/util"
 )
 
 var (
@@ -33,10 +34,10 @@ const (
 )
 
 func init() {
-	if !utils.Exist(ServerBoxDirPath) {
+	if !util.Exist(ServerBoxDirPath) {
 		err := os.MkdirAll(ServerBoxDirPath, 0755)
 		if err != nil {
-			utils.Error("[INIT] Create dir error: %v", err)
+			logger.Err("[INIT] Create dir error: %v", err)
 			panic(err)
 		}
 	}
