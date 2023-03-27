@@ -67,7 +67,7 @@
         }
     ],
     // 推送规则
-    // 类型 type: webhook, ios (以后有更多)
+    // 类型 type: webhook, ios, server酱 (以后有更多)
     // 接口 iface: 推送类型的接口
     // body成功正则 body_regex: 正则表达式匹配响应体
     // 成功code code: 响应码匹配
@@ -110,7 +110,7 @@
                 // 你可以从 ServerBox iOS app 的 设置 中获取 token
                 "token": "YOUR_TOKEN",
                 "title": "Server Notification",
-                "body": "{{key}}: {{value}}"
+                "content": "{{key}}: {{value}}"
             },
             "body_regex": ".*",
             "code": 200

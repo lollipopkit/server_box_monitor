@@ -70,7 +70,7 @@
     ],
     // Push rules
     //
-    // type: webhook, ios (more to come)
+    // type: webhook, ios, serverchan (more to come)
     // iface: interface for the push type
     // success_body_regex: regex to match the response body
     // success_code: response code to match
