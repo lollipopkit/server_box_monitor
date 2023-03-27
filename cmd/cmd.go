@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/lollipopkit/server_box_monitor/res"
 	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/server_box_monitor/res"
 	"github.com/urfave/cli/v2"
 )
 

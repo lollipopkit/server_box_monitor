@@ -20,14 +20,10 @@ var (
 )
 
 var (
-	status = new(Status)
+	Status = new(ServerStatus)
 )
 
-func GetStatus() *Status {
-	return status
-}
-
-type Status struct {
+type ServerStatus struct {
 	CPU         []OneCpuStatus
 	Mem         *MemStatus
 	Swap        *SwapStatus
@@ -152,13 +148,13 @@ func ParseStatus(s string) error {
 }
 
 func initMem() {
-	if status.Mem == nil {
-		status.Mem = &MemStatus{}
+	if Status.Mem == nil {
+		Status.Mem = &MemStatus{}
 	}
 }
 func initSwap() {
-	if status.Swap == nil {
-		status.Swap = &SwapStatus{}
+	if Status.Swap == nil {
+		Status.Swap = &SwapStatus{}
 	}
 }
 
@@ -178,28 +174,28 @@ func parseMemAndSwapStatus(s string) error {
 		switch true {
 		case strings.HasPrefix(line, "MemTotal:"):
 			initMem()
-			status.Mem.Total = size
+			Status.Mem.Total = size
 			fallthrough
 		case strings.HasPrefix(line, "MemFree:"):
 			initMem()
-			status.Mem.Free = size
-			status.Mem.Used = status.Mem.Total - status.Mem.Free
+			Status.Mem.Free = size
+			Status.Mem.Used = Status.Mem.Total - Status.Mem.Free
 			fallthrough
 		case strings.HasPrefix(line, "MemAvailable:"):
 			initMem()
-			status.Mem.Avail = size
+			Status.Mem.Avail = size
 		case strings.HasPrefix(line, "SwapTotal:"):
 			initSwap()
-			status.Swap.Total = size
+			Status.Swap.Total = size
 			fallthrough
 		case strings.HasPrefix(line, "SwapFree:"):
 			initSwap()
-			status.Swap.Free = size
-			status.Swap.Used = status.Swap.Total - status.Swap.Free
+			Status.Swap.Free = size
+			Status.Swap.Used = Status.Swap.Total - Status.Swap.Free
 			fallthrough
 		case strings.HasPrefix(line, "SwapCached:"):
 			initSwap()
-			status.Swap.Cached = size
+			Status.Swap.Cached = size
 		}
 	}
 	return nil
@@ -208,8 +204,8 @@ func parseMemAndSwapStatus(s string) error {
 func parseCPUStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
-	if len(status.CPU) != count {
-		status.CPU = make([]OneCpuStatus, count)
+	if len(Status.CPU) != count {
+		Status.CPU = make([]OneCpuStatus, count)
 	}
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
@@ -234,7 +230,7 @@ func parseCPUStatus(s string) error {
 				}
 				total += v
 			}
-			status.CPU[i].TimeSequence.Update(&CpuOneTimeStatus{
+			Status.CPU[i].TimeSequence.Update(&CpuOneTimeStatus{
 				Used:  user + sys,
 				Total: total,
 			})
@@ -247,8 +243,8 @@ func parseDiskStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	lines = lines[1:]
 	count := len(lines)
-	if len(status.Disk) != count {
-		status.Disk = make([]DiskStatus, count)
+	if len(Status.Disk) != count {
+		Status.Disk = make([]DiskStatus, count)
 	}
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
@@ -256,24 +252,24 @@ func parseDiskStatus(s string) error {
 		if len(fields) != 6 {
 			return errors.Join(ErrInvalidShellOutput, fmt.Errorf("invalid disk status: %s", line))
 		}
-		status.Disk[i].MountPath = fields[5]
-		status.Disk[i].Filesystem = fields[0]
+		Status.Disk[i].MountPath = fields[5]
+		Status.Disk[i].Filesystem = fields[0]
 		total, err := ParseToSize(fields[1])
 		if err != nil {
 			return err
 		}
-		status.Disk[i].Total = total
+		Status.Disk[i].Total = total
 		used, err := ParseToSize(fields[2])
 		if err != nil {
 			return err
 		}
-		status.Disk[i].Used = used
+		Status.Disk[i].Used = used
 		avail, err := ParseToSize(fields[3])
 		if err != nil {
 			return err
 		}
-		status.Disk[i].Avail = avail
-		status.Disk[i].UsedPercent = (float64(used) / float64(total)) * 100
+		Status.Disk[i].Avail = avail
+		Status.Disk[i].UsedPercent = (float64(used) / float64(total)) * 100
 	}
 	return nil
 }
@@ -288,16 +284,16 @@ func parseTemperatureStatus(s1, s2 string) error {
 		return errors.Join(ErrInvalidShellOutput, fmt.Errorf("invalid temperature status: %s, %s", s1, s2))
 	}
 	count := len(types)
-	if len(status.Temperature) != count {
-		status.Temperature = make([]TemperatureStatus, count)
+	if len(Status.Temperature) != count {
+		Status.Temperature = make([]TemperatureStatus, count)
 	}
 	for i := range types {
-		status.Temperature[i].Name = strings.TrimSpace(types[i])
+		Status.Temperature[i].Name = strings.TrimSpace(types[i])
 		value, err := strconv.ParseFloat(strings.TrimSpace(values[i]), 64)
 		if err != nil {
 			return err
 		}
-		status.Temperature[i].Value = value / 1000
+		Status.Temperature[i].Value = value / 1000
 	}
 	return nil
 }
@@ -305,8 +301,8 @@ func parseTemperatureStatus(s1, s2 string) error {
 func parseNetworkStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
-	if len(status.Network) != count-2 {
-		status.Network = make([]NetworkStatus, count-2)
+	if len(Status.Network) != count-2 {
+		Status.Network = make([]NetworkStatus, count-2)
 	}
 	for i := range lines {
 		if i < 2 {
@@ -318,7 +314,7 @@ func parseNetworkStatus(s string) error {
 			return errors.Join(ErrInvalidShellOutput, fmt.Errorf("invalid network status: %s", line))
 		}
 		idx := i - 2
-		status.Network[idx].Interface = strings.TrimRight(fields[0], ":")
+		Status.Network[idx].Interface = strings.TrimRight(fields[0], ":")
 		receiveBytes, err := strconv.ParseUint(fields[1], 10, 64)
 		if err != nil {
 			return err
@@ -329,7 +325,7 @@ func parseNetworkStatus(s string) error {
 			return err
 		}
 		transmit := Size(transmitBytes)
-		status.Network[idx].TimeSequence.Update(&NetworkOneTimeStatus{
+		Status.Network[idx].TimeSequence.Update(&NetworkOneTimeStatus{
 			Receive:  receive,
 			Transmit: transmit,
 		})

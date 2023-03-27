@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lollipopkit/gommon/logger"
 	"github.com/lollipopkit/server_box_monitor/model"
 	"github.com/lollipopkit/server_box_monitor/res"
-	"github.com/lollipopkit/gommon/logger"
 )
 
 var (
@@ -44,7 +44,7 @@ func Run() {
 
 	for {
 		err = model.RefreshStatus()
-		status := model.GetStatus()
+		status := model.Status
 		if err != nil {
 			logger.Warn("[STATUS] Get status error: %v", err)
 			goto SLEEP
@@ -75,10 +75,10 @@ func Run() {
 		for _, push := range model.Config.Pushes {
 			err := push.Push(pushPairs)
 			if err != nil {
-				logger.Warn("[PUSH] %s error: %v", push.Id(), err)
+				logger.Warn("[PUSH] %s error: %v", push.Name, err)
 				continue
 			}
-			logger.Suc("[PUSH] %s success", push.Id())
+			logger.Suc("[PUSH] %s success", push.Name)
 		}
 		pushPairsLock.RUnlock()
 

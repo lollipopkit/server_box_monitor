@@ -12,6 +12,7 @@ import (
 
 type Push struct {
 	Type      PushType        `json:"type"`
+	Name      string          `json:"name"`
 	Iface     json.RawMessage `json:"iface"`
 	BodyRegex string          `json:"body_regex"`
 	Code      int             `json:"code"`
@@ -64,22 +65,6 @@ func (p *Push) Push(args []*PushPair) error {
 	}
 	return nil
 }
-func (p *Push) Id() string {
-	iface, err := p.GetIface()
-	if err != nil {
-		return "UnknownPushIface"
-	}
-	switch iface.(type) {
-	case PushIfaceIOS:
-		return iface.(PushIfaceIOS).Name
-	case PushIfaceWebhook:
-		return iface.(PushIfaceWebhook).Name
-	case PushIfaceServerChan:
-		return iface.(PushIfaceServerChan).Name
-	default:
-		return fmt.Sprintf("UnknownPushId%v", iface)
-	}
-}
 
 // {{key}} {{value}}
 type PushFormat string
@@ -112,7 +97,6 @@ type PushIface interface {
 }
 
 type PushIfaceIOS struct {
-	Name    string     `json:"name"`
 	Token   string     `json:"token"`
 	Title   PushFormat `json:"title"`
 	Content PushFormat `json:"content"`
@@ -142,7 +126,6 @@ func (p PushIfaceIOS) push(args []*PushPair) ([]byte, int, error) {
 }
 
 type PushIfaceWebhook struct {
-	Name    string            `json:"name"`
 	Url     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
 	Method  string            `json:"method"`
@@ -161,8 +144,7 @@ func (p PushIfaceWebhook) push(args []*PushPair) ([]byte, int, error) {
 }
 
 type PushIfaceServerChan struct {
-	Name  string     `json:"name"`
-	SCKEY string     `json:"sckey"`
+	SCKey string     `json:"sckey"`
 	Title PushFormat `json:"title"`
 	Desp  PushFormat `json:"desp"`
 }
@@ -170,7 +152,7 @@ type PushIfaceServerChan struct {
 func (p PushIfaceServerChan) push(args []*PushPair) ([]byte, int, error) {
 	title := p.Title.Format(args)
 	desp := p.Desp.Format(args)
-	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKEY, title, desp)
+	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKey, title, desp)
 	return util.HttpDo(
 		"GET",
 		url,

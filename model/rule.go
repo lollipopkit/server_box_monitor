@@ -33,7 +33,7 @@ type Rule struct {
 func (r *Rule) Id() string {
 	return fmt.Sprintf("[%s %s %s]", r.MonitorType, r.Threshold, r.Matcher)
 }
-func (r *Rule) ShouldNotify(s *Status) (bool, *PushPair, error) {
+func (r *Rule) ShouldNotify(s *ServerStatus) (bool, *PushPair, error) {
 	t, err := ParseToThreshold(r.Threshold)
 	if err != nil {
 		return false, nil, errors.Join(ErrInvalidRule, err)

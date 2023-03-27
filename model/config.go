@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/lollipopkit/server_box_monitor/res"
-	"github.com/lollipopkit/gommon/util"
 	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/gommon/util"
+	"github.com/lollipopkit/server_box_monitor/res"
 )
 
 var (
@@ -85,8 +85,7 @@ var (
 	}
 	defaultWekhookBodyBytes, _ = json.Marshal(defaultWekhookBody)
 	defaultWebhookIface        = PushIfaceWebhook{
-		Name: "QQ Group",
-		Url:  "http://localhost:5700",
+		Url: "http://localhost:5700",
 		Headers: map[string]string{
 			"Content-Type":  "application/json",
 			"Authorization": "Bearer YOUR_SECRET",
@@ -97,12 +96,18 @@ var (
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
 
 	defaultIOSIface = PushIfaceIOS{
-		Name:    "My iPhone",
 		Token:   "YOUR_TOKEN",
 		Title:   "Server Notification",
 		Content: "{{key}}: {{value}}",
 	}
 	defaultIOSIfaceBytes, _ = json.Marshal(defaultIOSIface)
+
+	defaultServerChanIface = PushIfaceServerChan{
+		SCKey: "YOUR_SCKEY",
+		Title: "Server Notification",
+		Desp:  "{{key}}: {{value}}",
+	}
+	defaultServerChanIfaceBytes, _ = json.Marshal(defaultServerChanIface)
 
 	DefaultappConfig = &AppConfig{
 		Version:  1,
@@ -122,15 +127,24 @@ var (
 		Pushes: []Push{
 			{
 				Type:      PushTypeWebhook,
+				Name:      "QQ Group",
 				Iface:     defaultWebhookIfaceBytes,
 				BodyRegex: ".*",
 				Code:      200,
 			},
 			{
 				Type:      PushTypeIOS,
+				Name:      "My iPhone",
 				Iface:     defaultIOSIfaceBytes,
 				BodyRegex: ".*",
 				Code:      200,
+			},
+			{
+				Type: PushTypeServerChan,
+				Name: "ServerChan",
+				Iface: defaultServerChanIfaceBytes,
+				BodyRegex: ".*",
+				Code: 200,
 			},
 		},
 	}

@@ -57,6 +57,7 @@ type Speed struct {
 	Size
 	Time time.Duration
 }
+
 func (s *Speed) String() (string, error) {
 	if s.Time == 0 {
 		return "", fmt.Errorf("time equals zero: %#v", s)
@@ -90,4 +91,3 @@ func ParseToSpeed(s string) (*Speed, error) {
 	}
 	return &Speed{size, time}, nil
 }
-
