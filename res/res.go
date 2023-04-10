@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/gommon/term"
 	"github.com/lollipopkit/gommon/util"
 )
 
@@ -37,7 +37,7 @@ func init() {
 	if !util.Exist(ServerBoxDirPath) {
 		err := os.MkdirAll(ServerBoxDirPath, 0755)
 		if err != nil {
-			logger.Err("[INIT] Create dir error: %v", err)
+			term.Err("[INIT] Create dir error: %v", err)
 			panic(err)
 		}
 	}

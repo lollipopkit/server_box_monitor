@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/gommon/term"
 	"github.com/lollipopkit/gommon/util"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
@@ -28,12 +28,12 @@ func ReadAppConfig() error {
 	if !util.Exist(res.AppConfigPath) {
 		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
 		if err != nil {
-			logger.Err("[CONFIG] marshal default app config failed: %v", err)
+			term.Err("[CONFIG] marshal default app config failed: %v", err)
 			return err
 		}
 		err = os.WriteFile(res.AppConfigPath, configBytes, 0644)
 		if err != nil {
-			logger.Err("[CONFIG] write default app config failed: %v", err)
+			term.Err("[CONFIG] write default app config failed: %v", err)
 			return err
 		}
 		Config = DefaultappConfig
@@ -42,14 +42,14 @@ func ReadAppConfig() error {
 
 	configBytes, err := os.ReadFile(res.AppConfigPath)
 	if err != nil {
-		logger.Err("[CONFIG] read app config failed: %v", err)
+		term.Err("[CONFIG] read app config failed: %v", err)
 		return err
 	}
 	err = json.Unmarshal(configBytes, Config)
 	if err != nil {
-		logger.Err("[CONFIG] unmarshal app config failed: %v", err)
+		term.Err("[CONFIG] unmarshal app config failed: %v", err)
 	} else if Config.Version < DefaultappConfig.Version {
-		logger.Warn("[CONFIG] app config version is too old, please update it")
+		term.Warn("[CONFIG] app config version is too old, please update it")
 	}
 	return err
 }
@@ -62,12 +62,12 @@ func GetInterval() time.Duration {
 	d, err := time.ParseDuration(ac.Interval)
 	if err == nil {
 		if d < res.DefaultInterval {
-			logger.Warn("[CONFIG] interval is too short, use default interval: 1m")
+			term.Warn("[CONFIG] interval is too short, use default interval: 1m")
 			return res.DefaultInterval
 		}
 		return d
 	}
-	logger.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
+	term.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
 	return res.DefaultInterval
 }
 
@@ -140,11 +140,11 @@ var (
 				Code:      200,
 			},
 			{
-				Type: PushTypeServerChan,
-				Name: "ServerChan",
-				Iface: defaultServerChanIfaceBytes,
+				Type:      PushTypeServerChan,
+				Name:      "ServerChan",
+				Iface:     defaultServerChanIfaceBytes,
 				BodyRegex: ".*",
-				Code: 200,
+				Code:      200,
 			},
 		},
 	}

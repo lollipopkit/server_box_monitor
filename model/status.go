@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/gommon/term"
 	"github.com/lollipopkit/gommon/util"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
@@ -110,7 +110,7 @@ func RefreshStatus() error {
 	output, _ := util.Execute("bash", res.ServerBoxShellPath)
 	err := os.WriteFile(filepath.Join(res.ServerBoxDirPath, "shell_output.log"), []byte(output), 0644)
 	if err != nil {
-		logger.Warn("[STATUS] write shell output log failed: %s", err)
+		term.Warn("[STATUS] write shell output log failed: %s", err)
 	}
 	return ParseStatus(output)
 }
@@ -126,23 +126,23 @@ func ParseStatus(s string) error {
 	}
 	err := parseNetworkStatus(segments[1])
 	if err != nil {
-		logger.Warn("parse network status failed: %s", err)
+		term.Warn("parse network status failed: %s", err)
 	}
 	err = parseCPUStatus(segments[2])
 	if err != nil {
-		logger.Warn("parse cpu status failed: %s", err)
+		term.Warn("parse cpu status failed: %s", err)
 	}
 	err = parseDiskStatus(segments[3])
 	if err != nil {
-		logger.Warn("parse disk status failed: %s", err)
+		term.Warn("parse disk status failed: %s", err)
 	}
 	err = parseMemAndSwapStatus(segments[4])
 	if err != nil {
-		logger.Warn("parse mem status failed: %s", err)
+		term.Warn("parse mem status failed: %s", err)
 	}
 	err = parseTemperatureStatus(segments[5], segments[6])
 	if err != nil {
-		logger.Warn("parse temperature status failed: %s", err)
+		term.Warn("parse temperature status failed: %s", err)
 	}
 	return nil
 }

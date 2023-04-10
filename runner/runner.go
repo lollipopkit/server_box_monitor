@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lollipopkit/gommon/logger"
+	"github.com/lollipopkit/gommon/term"
 	"github.com/lollipopkit/server_box_monitor/model"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
@@ -19,12 +19,12 @@ var (
 func init() {
 	scriptBytes, err := res.Files.ReadFile(res.ServerBoxShellFileName)
 	if err != nil {
-		logger.Err("[INIT] Read embed file error: %v", err)
+		term.Err("[INIT] Read embed file error: %v", err)
 		panic(err)
 	}
 	err = os.WriteFile(res.ServerBoxShellPath, scriptBytes, 0755)
 	if err != nil {
-		logger.Err("[INIT] Write script file error: %v", err)
+		term.Err("[INIT] Write script file error: %v", err)
 		panic(err)
 	}
 }
@@ -38,7 +38,7 @@ func Start() {
 func Run() {
 	err := model.ReadAppConfig()
 	if err != nil {
-		logger.Err("[CONFIG] Read app config error: %v", err)
+		term.Err("[CONFIG] Read app config error: %v", err)
 		panic(err)
 	}
 
@@ -46,7 +46,7 @@ func Run() {
 		err = model.RefreshStatus()
 		status := model.Status
 		if err != nil {
-			logger.Warn("[STATUS] Get status error: %v", err)
+			term.Warn("[STATUS] Get status error: %v", err)
 			goto SLEEP
 		}
 
@@ -54,7 +54,7 @@ func Run() {
 			notify, pushPair, err := rule.ShouldNotify(status)
 			if err != nil {
 				if !strings.Contains(err.Error(), "not ready") {
-					logger.Warn("[RULE] %s error: %v", rule.Id(), err)
+					term.Warn("[RULE] %s error: %v", rule.Id(), err)
 				}
 			}
 
@@ -75,10 +75,10 @@ func Run() {
 		for _, push := range model.Config.Pushes {
 			err := push.Push(pushPairs)
 			if err != nil {
-				logger.Warn("[PUSH] %s error: %v", push.Name, err)
+				term.Warn("[PUSH] %s error: %v", push.Name, err)
 				continue
 			}
-			logger.Suc("[PUSH] %s success", push.Name)
+			term.Suc("[PUSH] %s success", push.Name)
 		}
 		pushPairsLock.RUnlock()
 
