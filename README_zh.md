@@ -11,8 +11,24 @@
 2. 编辑配置文件
     - 配置文件保存在 `~/.config/server_box/config.json`
     - 完整的配置示例 [在这里](doc/CONFIG_zh.jsonc)
-3. 执行 `server_box_monitor` 来运行
-    - 如果你是下载的二进制, 你需要执行 `./server_box_monitor`
+3. 运行.
+    - 注意: 如果是下载的二进制文件，命令为 `./server_box_monitor`
+    - 有多种方式运行
+        1. (推荐) 配置 `systemd`
+            - 示例配置文件 [这里](doc/srvbox.service)
+            - Rootless
+                - 复制文件到 `~/.config/systemd/user/srvbox.service`
+                - `systemctl --user enable --now srvbox`
+                - 你可以执行 `sudo loginctl enable-linger $USER` 让服务在注销后继续运行
+            - Rootful
+                - 复制文件到 `/etc/systemd/system/srvbox.service`
+                - `systemctl enable --now srvbox`
+        2. 使用 `screen`
+            - 运行: `screen -S srvbox`, 然后 `server_box_monitor`
+            - 移至后台（Detach）: `Ctrl + A + D`
+            - 移至前台（Attach）: `screen -r srvbox`
+        3. 直接运行 `server_box_monitor`
+            - 这会在前台运行, 你可以使用 `Ctrl + C` 来停止.
 
 ## 🔖 License
 `GPL v3. lollipopkit 2023`

@@ -99,7 +99,9 @@
                     }
                 }
             },
-            // Regex to match the response body
+            // Check push is successful or not:
+            // Will skip if not set or empty
+            // 
             // If the response body matches the regex, the push is considered successful
             "body_regex": ".*",
             // If the response code equals, the push is considered successful
