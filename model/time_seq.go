@@ -1,6 +1,6 @@
 package model
 
-type TimeSequence[T CpuOneTimeStatus | NetworkOneTimeStatus] struct {
+type TimeSequence[T any] struct {
 	Old *T
 	New *T
 }

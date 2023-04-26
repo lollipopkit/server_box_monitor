@@ -117,7 +117,7 @@ func (p PushIfaceIOS) push(args []*PushPair) ([]byte, int, error) {
 	return util.HttpDo(
 		"POST",
 		"https://push.lolli.tech/v1/ios",
-		string(bodyBytes),
+		bodyBytes,
 		map[string]string{
 			"Content-Type": "application/json",
 			"AppID":        "com.lollipopkit.toolbox",
@@ -156,7 +156,7 @@ func (p PushIfaceServerChan) push(args []*PushPair) ([]byte, int, error) {
 	return util.HttpDo(
 		"GET",
 		url,
-		"",
+		nil,
 		nil,
 	)
 }

@@ -33,7 +33,7 @@ type Rule struct {
 func (r *Rule) Id() string {
 	return fmt.Sprintf("[%s %s %s]", r.MonitorType, r.Threshold, r.Matcher)
 }
-func (r *Rule) ShouldNotify(s *ServerStatus) (bool, *PushPair, error) {
+func (r *Rule) ShouldNotify(s *serverStatus) (bool, *PushPair, error) {
 	t, err := ParseToThreshold(r.Threshold)
 	if err != nil {
 		return false, nil, errors.Join(ErrInvalidRule, err)
@@ -56,7 +56,7 @@ func (r *Rule) ShouldNotify(s *ServerStatus) (bool, *PushPair, error) {
 	}
 }
 
-func (r *Rule) shouldNotifyCPU(ss []OneCpuStatus, t *Threshold) (bool, *PushPair, error) {
+func (r *Rule) shouldNotifyCPU(ss []oneCpuStatus, t *Threshold) (bool, *PushPair, error) {
 	if len(ss) == 0 {
 		// utils.Warn("cpu is not valid, skip this rule")
 		return false, nil, nil
@@ -104,7 +104,7 @@ func (r *Rule) shouldNotifyCPU(ss []OneCpuStatus, t *Threshold) (bool, *PushPair
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for cpu: %s", t.ThresholdType.Name()))
 	}
 }
-func (r *Rule) shouldNotifyMemory(s *MemStatus, t *Threshold) (bool, *PushPair, error) {
+func (r *Rule) shouldNotifyMemory(s *memStatus, t *Threshold) (bool, *PushPair, error) {
 	if s == nil {
 		// utils.Warn("memory is not valid, skip this rule")
 		return false, nil, nil
@@ -148,7 +148,7 @@ func (r *Rule) shouldNotifyMemory(s *MemStatus, t *Threshold) (bool, *PushPair, 
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for memory: %s", t.ThresholdType.Name()))
 	}
 }
-func (r *Rule) shouldNotifySwap(s *SwapStatus, t *Threshold) (bool, *PushPair, error) {
+func (r *Rule) shouldNotifySwap(s *swapStatus, t *Threshold) (bool, *PushPair, error) {
 	if s == nil {
 		// utils.Warn("swap is not valid, skip this rule")
 		return false, nil, nil
@@ -189,12 +189,12 @@ func (r *Rule) shouldNotifySwap(s *SwapStatus, t *Threshold) (bool, *PushPair, e
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for swap: %s", t.ThresholdType.Name()))
 	}
 }
-func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushPair, error) {
+func (r *Rule) shouldNotifyDisk(s []diskStatus, t *Threshold) (bool, *PushPair, error) {
 	if len(s) == 0 {
 		// utils.Warn("disk is not valid, skip this rule")
 		return false, nil, nil
 	}
-	var disk DiskStatus
+	var disk diskStatus
 	var have bool
 	for _, d := range s {
 		if d.MountPath == r.Matcher || d.Filesystem == r.Matcher {
@@ -230,13 +230,13 @@ func (r *Rule) shouldNotifyDisk(s []DiskStatus, t *Threshold) (bool, *PushPair, 
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for disk: %s", t.ThresholdType.Name()))
 	}
 }
-func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *PushPair, error) {
+func (r *Rule) shouldNotifyNetwork(s []networkStatus, t *Threshold) (bool, *PushPair, error) {
 	if len(s) == 0 {
 		// utils.Warn("network is not valid, skip this rule")
 		return false, nil, nil
 	}
 
-	var net NetworkStatus
+	var net networkStatus
 	var have bool
 	for _, n := range s {
 		if strings.Contains(r.Matcher, n.Interface) {
@@ -304,13 +304,13 @@ func (r *Rule) shouldNotifyNetwork(s []NetworkStatus, t *Threshold) (bool, *Push
 	}
 }
 
-func (r *Rule) shouldNotifyTemperature(s []TemperatureStatus, t *Threshold) (bool, *PushPair, error) {
+func (r *Rule) shouldNotifyTemperature(s []temperatureStatus, t *Threshold) (bool, *PushPair, error) {
 	if len(s) == 0 {
 		// utils.Warn("temperature is not valid, skip this rule")
 		return false, nil, nil
 	}
 
-	var temp TemperatureStatus
+	var temp temperatureStatus
 	var have bool
 	for _, t := range s {
 		if strings.Contains(t.Name, r.Matcher) {

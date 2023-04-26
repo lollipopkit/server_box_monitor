@@ -1,6 +1,6 @@
 {
     "version": 1,
-    // Interval of checking and pushing
+    // Interval of checking
     // Valid formats: 1m 1h 1d
     // Default: 1m
     // Values less than 1m will be ignored

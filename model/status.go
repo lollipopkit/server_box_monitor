@@ -20,34 +20,34 @@ var (
 )
 
 var (
-	Status = new(ServerStatus)
+	Status = new(serverStatus)
 )
 
-type ServerStatus struct {
-	CPU         []OneCpuStatus
-	Mem         *MemStatus
-	Swap        *SwapStatus
-	Disk        []DiskStatus
-	Network     []NetworkStatus
-	Temperature []TemperatureStatus
+type serverStatus struct {
+	CPU         []oneCpuStatus
+	Mem         *memStatus
+	Swap        *swapStatus
+	Disk        []diskStatus
+	Network     []networkStatus
+	Temperature []temperatureStatus
 }
 
-type TemperatureStatus struct {
+type temperatureStatus struct {
 	Value float64
 	Name  string
 }
 
-type CpuOneTimeStatus struct {
+type cpuOneTimeStatus struct {
 	Used  int
 	Total int
 }
 
-type OneCpuStatus struct {
+type oneCpuStatus struct {
 	Core int
-	TimeSequence[CpuOneTimeStatus]
+	TimeSequence[cpuOneTimeStatus]
 }
 
-func (cs *OneCpuStatus) UsedPercent() (float64, error) {
+func (cs *oneCpuStatus) UsedPercent() (float64, error) {
 	if cs.TimeSequence.New == nil || cs.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
@@ -59,21 +59,21 @@ func (cs *OneCpuStatus) UsedPercent() (float64, error) {
 	return float64(used) / float64(total) * 100, nil
 }
 
-type MemStatus struct {
+type memStatus struct {
 	Total Size
 	Avail Size
 	Free  Size
 	Used  Size
 }
 
-type SwapStatus struct {
+type swapStatus struct {
 	Total  Size
 	Free   Size
 	Used   Size
 	Cached Size
 }
 
-type DiskStatus struct {
+type diskStatus struct {
 	MountPath   string
 	Filesystem  string
 	Total       Size
@@ -82,23 +82,23 @@ type DiskStatus struct {
 	UsedPercent float64
 }
 
-type NetworkOneTimeStatus struct {
+type networkOneTimeStatus struct {
 	Transmit Size
 	Receive  Size
 }
-type NetworkStatus struct {
+type networkStatus struct {
 	Interface string
-	TimeSequence[NetworkOneTimeStatus]
+	TimeSequence[networkOneTimeStatus]
 }
 
-func (ns *NetworkStatus) TransmitSpeed() (Size, error) {
+func (ns *networkStatus) TransmitSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
 	diff := float64(ns.TimeSequence.New.Transmit - ns.TimeSequence.Old.Transmit)
 	return Size(diff / GetIntervalInSeconds()), nil
 }
-func (ns *NetworkStatus) ReceiveSpeed() (Size, error) {
+func (ns *networkStatus) ReceiveSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
@@ -149,16 +149,18 @@ func ParseStatus(s string) error {
 
 func initMem() {
 	if Status.Mem == nil {
-		Status.Mem = &MemStatus{}
+		Status.Mem = &memStatus{}
 	}
 }
 func initSwap() {
 	if Status.Swap == nil {
-		Status.Swap = &SwapStatus{}
+		Status.Swap = &swapStatus{}
 	}
 }
 
 func parseMemAndSwapStatus(s string) error {
+	initMem()
+	initSwap()
 	lines := strings.Split(s, "\n")
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
@@ -173,28 +175,22 @@ func parseMemAndSwapStatus(s string) error {
 
 		switch true {
 		case strings.HasPrefix(line, "MemTotal:"):
-			initMem()
 			Status.Mem.Total = size
 			fallthrough
 		case strings.HasPrefix(line, "MemFree:"):
-			initMem()
 			Status.Mem.Free = size
 			Status.Mem.Used = Status.Mem.Total - Status.Mem.Free
 			fallthrough
 		case strings.HasPrefix(line, "MemAvailable:"):
-			initMem()
 			Status.Mem.Avail = size
 		case strings.HasPrefix(line, "SwapTotal:"):
-			initSwap()
 			Status.Swap.Total = size
 			fallthrough
 		case strings.HasPrefix(line, "SwapFree:"):
-			initSwap()
 			Status.Swap.Free = size
 			Status.Swap.Used = Status.Swap.Total - Status.Swap.Free
 			fallthrough
 		case strings.HasPrefix(line, "SwapCached:"):
-			initSwap()
 			Status.Swap.Cached = size
 		}
 	}
@@ -205,7 +201,7 @@ func parseCPUStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
 	if len(Status.CPU) != count {
-		Status.CPU = make([]OneCpuStatus, count)
+		Status.CPU = make([]oneCpuStatus, count)
 	}
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
@@ -230,7 +226,7 @@ func parseCPUStatus(s string) error {
 				}
 				total += v
 			}
-			Status.CPU[i].TimeSequence.Update(&CpuOneTimeStatus{
+			Status.CPU[i].TimeSequence.Update(&cpuOneTimeStatus{
 				Used:  user + sys,
 				Total: total,
 			})
@@ -244,7 +240,7 @@ func parseDiskStatus(s string) error {
 	lines = lines[1:]
 	count := len(lines)
 	if len(Status.Disk) != count {
-		Status.Disk = make([]DiskStatus, count)
+		Status.Disk = make([]diskStatus, count)
 	}
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
@@ -285,7 +281,7 @@ func parseTemperatureStatus(s1, s2 string) error {
 	}
 	count := len(types)
 	if len(Status.Temperature) != count {
-		Status.Temperature = make([]TemperatureStatus, count)
+		Status.Temperature = make([]temperatureStatus, count)
 	}
 	for i := range types {
 		Status.Temperature[i].Name = strings.TrimSpace(types[i])
@@ -302,7 +298,7 @@ func parseNetworkStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
 	if len(Status.Network) != count-2 {
-		Status.Network = make([]NetworkStatus, count-2)
+		Status.Network = make([]networkStatus, count-2)
 	}
 	for i := range lines {
 		if i < 2 {
@@ -325,7 +321,7 @@ func parseNetworkStatus(s string) error {
 			return err
 		}
 		transmit := Size(transmitBytes)
-		Status.Network[idx].TimeSequence.Update(&NetworkOneTimeStatus{
+		Status.Network[idx].TimeSequence.Update(&networkOneTimeStatus{
 			Receive:  receive,
 			Transmit: transmit,
 		})

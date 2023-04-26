@@ -14,6 +14,8 @@ import (
 var (
 	pushPairs     = []*model.PushPair{}
 	pushPairsLock = new(sync.RWMutex)
+	lastPushTime time.Time
+	checkInterval = time.Second * 3
 )
 
 func init() {
@@ -42,7 +44,7 @@ func run() {
 		panic(err)
 	}
 
-	for range time.NewTicker(model.GetInterval()).C {
+	for range time.NewTicker(checkInterval).C {
 		err = model.RefreshStatus()
 		status := model.Status
 		if err != nil {
@@ -68,8 +70,12 @@ func run() {
 		if len(pushPairs) == 0 {
 			continue
 		}
+		
+		if time.Now().Sub(lastPushTime) < model.GetInterval() {
+			continue
+		}
 
-		term.Info("[STATUS] refreshed, %d to push", len(pushPairs))
+		term.Info("[PUSH] %d to push", len(pushPairs))
 
 		pushPairsLock.RLock()
 		for _, push := range model.Config.Pushes {
