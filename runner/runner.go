@@ -30,24 +30,24 @@ func init() {
 }
 
 func Start() {
-	go Run()
+	go run()
 	// 阻塞主线程
 	select {}
 }
 
-func Run() {
+func run() {
 	err := model.ReadAppConfig()
 	if err != nil {
 		term.Err("[CONFIG] Read app config error: %v", err)
 		panic(err)
 	}
 
-	for {
+	for range time.NewTicker(model.GetInterval()).C {
 		err = model.RefreshStatus()
 		status := model.Status
 		if err != nil {
 			term.Warn("[STATUS] Get status error: %v", err)
-			goto SLEEP
+			continue
 		}
 
 		for _, rule := range model.Config.Rules {
@@ -66,10 +66,10 @@ func Run() {
 		}
 
 		if len(pushPairs) == 0 {
-			goto SLEEP
+			continue
 		}
 
-		// utils.Info("[STATUS] refreshed, %d to push", len(pushPairs))
+		term.Info("[STATUS] refreshed, %d to push", len(pushPairs))
 
 		pushPairsLock.RLock()
 		for _, push := range model.Config.Pushes {
@@ -85,7 +85,5 @@ func Run() {
 		pushPairsLock.Lock()
 		pushPairs = []*model.PushPair{}
 		pushPairsLock.Unlock()
-	SLEEP:
-		time.Sleep(model.GetInterval())
 	}
 }
