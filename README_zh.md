@@ -6,7 +6,7 @@
 
 ## 📖 使用方法
 1. 在服务器上安装此应用程序
-    - 如果你安装了 `go`, 你可以运行 `go install github.com/lollipopkit/server_box_monitor` 来安装
+    - 如果你安装了 `go`, 你可以运行 `go install github.com/lollipopkit/server_box_monitor@latest` 来安装
     - 如果你没有安装 `go`, 你可以从 [发布](https://github.com/lollipopkit/server_box_monitor/releases) 下载二进制文件
 2. 编辑配置文件
     - 配置文件保存在 `~/.config/server_box/config.json`

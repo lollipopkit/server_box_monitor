@@ -12,4 +12,4 @@ ExecStart=/usr/bin/server_box_monitor
 WorkingDirectory=/home/xxx/.config/server_box
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

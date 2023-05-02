@@ -1,9 +1,9 @@
 {
     "version": 1,
     // Interval of checking
-    // Valid formats: 1m 1h 1d
-    // Default: 1m
-    // Values less than 1m will be ignored
+    // Valid formats: 1s 1m 1h
+    // Default: 30s
+    // Values less than 10s will be ignored
     "interval": "1m",
     // Check rules
     //

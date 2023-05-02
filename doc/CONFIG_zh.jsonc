@@ -1,10 +1,10 @@
 {
     "version": 1,
     // 时间间隔，用于推送
-    // 有效格式: 1m 1h 1d
-    // 默认: 1m
-    // 小于 1m 的值将被忽略
-    "interval": "1m",
+    // 有效格式: 1s 1m 1h
+    // 默认: 30s
+    // 小于 10s 的值将被忽略
+    "interval": "30s",
     // 监测规则
     // 可用类型(type): cpu, mem, net, disk, temp (温度), swap
     //

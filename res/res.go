@@ -30,7 +30,7 @@ var (
 )
 
 const (
-	DefaultInterval = time.Minute
+	DefaultInterval = time.Second * 30
 )
 
 func init() {

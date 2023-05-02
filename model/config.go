@@ -16,9 +16,9 @@ var (
 
 type AppConfig struct {
 	Version int `json:"version"`
-	// Such as "300ms", "-1.5h" or "2h45m".
-	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-	// Values less than 1 minute are not allowed.
+	// Such as "30s" or "5m".
+	// Valid time units are "s", "m", "h".
+	// Values less than 10 seconds are not allowed.
 	Interval string `json:"interval"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
@@ -76,14 +76,14 @@ func GetIntervalInSeconds() float64 {
 }
 
 var (
-	defaultWekhookBody = map[string]interface{}{
+	defaultWebhookBody = map[string]interface{}{
 		"action": "send_group_msg",
 		"params": map[string]interface{}{
 			"group_id": 123456789,
 			"message":  "ServerBox Notification\n{{key}}: {{value}}",
 		},
 	}
-	defaultWekhookBodyBytes, _ = json.Marshal(defaultWekhookBody)
+	defaultWekhookBodyBytes, _ = json.Marshal(defaultWebhookBody)
 	defaultWebhookIface        = PushIfaceWebhook{
 		Url: "http://localhost:5700",
 		Headers: map[string]string{
