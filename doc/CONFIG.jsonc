@@ -97,15 +97,15 @@
                         "group_id": 123456789,
                         "message": "ServerBox Notification\n{{key}}: {{value}}"
                     }
-                }
-            },
-            // Check push is successful or not:
-            // Will skip if not set or empty
-            // 
-            // If the response body matches the regex, the push is considered successful
-            "body_regex": ".*",
-            // If the response code equals, the push is considered successful
-            "code": 200
+                },
+                // Check push is successful or not:
+                // Will skip if not set or empty
+                // 
+                // If the response body matches the regex, the push is considered successful
+                "body_regex": ".*",
+                // If the response code equals, the push is considered successful
+                "code": 200
+            }
         },
         {
             "type": "ios",
@@ -116,13 +116,13 @@
                 // {{key}} and {{value}} will be replaced with the key and value of the check
                 "title": "Server Notification",
                 // {{key}} and {{value}} will be replaced with the key and value of the check
-                "content": "{{key}}: {{value}}"
-            },
-            // Regex to match the response body
-            // If the response body matches the regex, the push is considered successful
-            "body_regex": ".*",
-            // If the response code equals, the push is considered successful
-            "code": 200
+                "content": "{{key}}: {{value}}",
+                // Regex to match the response body
+                // If the response body matches the regex, the push is considered successful
+                "body_regex": ".*",
+                // If the response code equals, the push is considered successful
+                "code": 200
+            }
         },
         {
             "type": "server_chan",
@@ -131,10 +131,10 @@
                 // Details please refer to https://sct.ftqq.com/
                 "sckey": "YOUR_SCKEY",
                 "title": "Server Notification",
-                "desp": "{{key}}: {{value}}"
-            },
-            "body_regex": ".*",
-            "code": 200
+                "desp": "{{key}}: {{value}}",
+                "body_regex": ".*",
+                "code": 200
+            }
         }
     ]
 }

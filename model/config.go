@@ -92,6 +92,8 @@ var (
 		},
 		Method: "POST",
 		Body:   defaultWekhookBodyBytes,
+		BodyRegex: ".*",
+		Code:      200,
 	}
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
 
@@ -99,6 +101,8 @@ var (
 		Token:   "YOUR_TOKEN",
 		Title:   "Server Notification",
 		Content: "{{key}}: {{value}}",
+		BodyRegex: ".*",
+		Code:      200,
 	}
 	defaultIOSIfaceBytes, _ = json.Marshal(defaultIOSIface)
 
@@ -106,12 +110,14 @@ var (
 		SCKey: "YOUR_SCKEY",
 		Title: "Server Notification",
 		Desp:  "{{key}}: {{value}}",
+		BodyRegex: ".*",
+		Code:      200,
 	}
 	defaultServerChanIfaceBytes, _ = json.Marshal(defaultServerChanIface)
 
 	DefaultappConfig = &AppConfig{
 		Version:  1,
-		Interval: "1m",
+		Interval: "30s",
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,
@@ -129,22 +135,16 @@ var (
 				Type:      PushTypeWebhook,
 				Name:      "QQ Group",
 				Iface:     defaultWebhookIfaceBytes,
-				BodyRegex: ".*",
-				Code:      200,
 			},
 			{
 				Type:      PushTypeIOS,
 				Name:      "My iPhone",
 				Iface:     defaultIOSIfaceBytes,
-				BodyRegex: ".*",
-				Code:      200,
 			},
 			{
 				Type:      PushTypeServerChan,
 				Name:      "ServerChan",
 				Iface:     defaultServerChanIfaceBytes,
-				BodyRegex: ".*",
-				Code:      200,
 			},
 		},
 	}

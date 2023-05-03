@@ -94,15 +94,15 @@
                         "group_id": 123456789,
                         "message": "ServerBox Notification\n{{key}}: {{value}}"
                     }
-                }
-            },
-            // 推送校验：
-            // 如果 regex 和 code 未空，将不会检查响应体和响应码
-            //
-            // 如果响应体匹配，推送将被认为成功
-            "body_regex": ".*",
-            // 如果响应码匹配，推送将被认为成功
-            "code": 200
+                },
+                // 推送校验：
+                // 如果 regex 和 code 未空，将不会检查响应体和响应码
+                //
+                // 如果响应体匹配，推送将被认为成功
+                "body_regex": ".*",
+                // 如果响应码匹配，推送将被认为成功
+                "code": 200
+            }
         },
         {
             "type": "ios",
@@ -111,10 +111,10 @@
                 // 你可以从 ServerBox iOS app 的 设置 中获取 token
                 "token": "YOUR_TOKEN",
                 "title": "Server Notification",
-                "content": "{{key}}: {{value}}"
-            },
-            "body_regex": ".*",
-            "code": 200
+                "content": "{{key}}: {{value}}",
+                "body_regex": ".*",
+                "code": 200
+            }
         },
         {
             "type": "server_chan",
@@ -123,10 +123,10 @@
                 // 具体配置请参考 https://sct.ftqq.com/
                 "sckey": "YOUR_SCKEY",
                 "title": "Server Notification",
-                "desp": "{{key}}: {{value}}"
-            },
-            "body_regex": ".*",
-            "code": 200
+                "desp": "{{key}}: {{value}}",
+                "body_regex": ".*",
+                "code": 200
+            }
         }
     ]
 }

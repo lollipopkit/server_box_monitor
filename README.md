@@ -3,6 +3,7 @@ English | [简体中文](README_zh.md)
 ## ServerBox Monitor
 This app runs on server end and monitors the server status.  
 It is a part of [ServerBox](https://github.com/lollipopkit/flutter_server_box) project.  
+**It's under active development, you may need to reconfig it after upgrading.**
 
 ## 📖 Usage
 1. Install the app on your server.

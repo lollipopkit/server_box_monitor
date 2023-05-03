@@ -3,6 +3,7 @@
 ## ServerBox 监测器
 这个应用程序运行在服务器端, 监测服务器状态.  
 这是 [ServerBox](https://github.com/lollipopkit/flutter_server_box) 项目的一部分.
+**正处于活跃开发中，你可能需要在更新后重新配置.**
 
 ## 📖 使用方法
 1. 在服务器上安装此应用程序
