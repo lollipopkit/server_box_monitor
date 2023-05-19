@@ -1,0 +1,16 @@
+args := os.args
+
+if #args != 3 {
+    printf('need version: %s', args)
+    os.exit(0)
+}
+
+version := args[2]
+cmd := fmt('docker buildx build -t lollipopkit/srvbox_monitor:%s --platform=linux/arm64,linux/amd64 --build-arg APPVER=%s .', version, version)
+
+result, err := os.exec(cmd)
+if err != nil {
+    printf('%s:\n%s', err, result)
+} else {
+    printf('%sSuccess%s', term.green, term.nocolor)
+}
