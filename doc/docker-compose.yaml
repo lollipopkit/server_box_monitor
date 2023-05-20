@@ -1,7 +1,0 @@
-version: "3.0"
-services:
-  srvbox:
-    image: lollipopkit/srvbox_monitor:latest
-    container_name: srvbox
-    ports:
-      - 3770:3770
