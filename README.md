@@ -10,7 +10,7 @@ It is a part of [ServerBox](https://github.com/lollipopkit/flutter_server_box) p
    - `Docker`:
      - (Recommonded) [Docker compose](docker-compose.yaml)
      - Or `docker run -d --name srvbox -v ./config:/root/.config/server_box lollipopkit/srvbox_monitor:latest`
-     - (Optional) If you need to update it, `docker rm srvbox -f && docker rmi lollipopkit/server_box_monitor:latest` to delete old image.
+     - (Optional) If you need to update it, `docker rm srvbox -f && docker rmi lollipopkit/srvbox_monitor:latest` to delete old image. And then run the command above.
    - Use binary.
      - If you have `go` installed, you can run `go install github.com/lollipopkit/server_box_monitor@latest`
      - If you don't have `go` installed, you can download the binary from [release page](https://github.com/lollipopkit/server_box_monitor/releases)
@@ -22,6 +22,7 @@ It is a part of [ServerBox](https://github.com/lollipopkit/flutter_server_box) p
          - You can run `sudo loginctl enable-linger $USER` to make the servicerun   after logout
        - Rootful
          - Copy file to `/etc/systemd/system/srvbox.service`
+         - Uncomment `User` in the file
          - Run `systemctl enable --now srvbox`
 2. Edit the config file.
    - The config file is located at

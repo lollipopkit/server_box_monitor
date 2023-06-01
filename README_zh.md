@@ -10,7 +10,7 @@
    - `Docker`:
      - (推荐) [Docker compose](docker-compose.yaml)
      - 或者 `docker run -d --name srvbox -v ./config:/root/.config/server_box lollipopkit/srvbox_monitor:latest`
-     - 如果你要更新, 先执行 `docker rm srvbox -f && docker rmi lollipopkit/server_box_monitor:latest` 来删除旧的镜像.
+     - 如果要更新, 先执行 `docker rm srvbox -f && docker rmi lollipopkit/srvbox_monitor:latest` 来删除旧的镜像.
    - 可执行文件.
      - 如果你有安装 `go`, `go install github.com/lollipopkit/server_box_monitor@latest`
      - 或者从 [发布](https://github.com/lollipopkit/server_box_monitor/releases) 下载
@@ -22,6 +22,7 @@
          -  `sudo loginctl enable-linger $USER` 让服务在注销后继续运行.
        - root
          - 复制示例文件到 `/etc/systemd/system/srvbox.service`
+         - 取消 `User` 行注释
          - `systemctl enable --now srvbox`
 2. 修改配置.
    - 配置文件在
