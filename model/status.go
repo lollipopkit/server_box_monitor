@@ -146,8 +146,8 @@ func ParseStatus(s string) error {
 		segments[i] = strings.TrimSpace(segments[i])
 		segments[i] = strings.Trim(segments[i], "\n")
 	}
-	if len(segments) != 10 {
-		return ErrInvalidShellOutput
+	if len(segments) != 7 {
+		return errors.Join(ErrInvalidShellOutput, fmt.Errorf("expect 7 segments, but got %d", len(segments)))
 	}
 	err := parseNetworkStatus(segments[1])
 	if err != nil {

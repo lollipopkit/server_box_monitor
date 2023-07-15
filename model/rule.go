@@ -280,7 +280,7 @@ func (r *Rule) shouldNotifyNetwork(s []networkStatus, t *Threshold) (bool, *Push
 		}
 		return ok, &PushPair{
 			Key:   r.Matcher,
-			Value: speed.String(),
+			Value: speed.String()+"/s",
 		}, nil
 	case ThresholdTypeSize:
 		size := Size(0)

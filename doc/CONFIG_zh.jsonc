@@ -67,10 +67,11 @@
         }
     ],
     // 推送规则
+    //
     // 类型 type: webhook, ios, server酱 (以后有更多)
     // 接口 iface: 推送类型的接口
-    // body成功正则 body_regex: 正则表达式匹配响应体
-    // 成功code code: 响应码匹配
+    // body_regex: 正则表达式匹配响应体
+    // code: 响应码匹配
     "pushes": [
         {
             // 这是一个推送到QQ群的例子

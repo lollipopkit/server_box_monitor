@@ -17,8 +17,6 @@ import (
 var (
 	pushPairs     = []*model.PushPair{}
 	pushPairsLock = new(sync.RWMutex)
-	lastPushTime  time.Time
-	checkInterval = time.Second * 3
 )
 
 func init() {
@@ -35,20 +33,20 @@ func init() {
 }
 
 func Start() {
-	go runMonitor()
 	go runWeb()
+	go runCheck()
 	// 阻塞主线程
 	select {}
 }
 
-func runMonitor() {
+func runCheck() {
 	err := model.ReadAppConfig()
 	if err != nil {
 		log.Err("[CONFIG] Read app config error: %v", err)
 		panic(err)
 	}
 
-	for range time.NewTicker(checkInterval).C {
+	for range time.NewTicker(model.GetInterval()).C {
 		err = model.RefreshStatus()
 		status := model.Status
 		if err != nil {
@@ -59,7 +57,7 @@ func runMonitor() {
 		for _, rule := range model.Config.Rules {
 			notify, pushPair, err := rule.ShouldNotify(status)
 			if err != nil {
-				if !strings.Contains(err.Error(), "not ready") {
+				if !strings.Contains(err.Error(), model.ErrNotReady.Error()) {
 					log.Warn("[RULE] %s error: %v", rule.Id(), err)
 				}
 			}
@@ -72,10 +70,6 @@ func runMonitor() {
 		}
 
 		if len(pushPairs) == 0 {
-			continue
-		}
-
-		if time.Now().Sub(lastPushTime) < model.GetInterval() {
 			continue
 		}
 

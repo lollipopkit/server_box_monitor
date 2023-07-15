@@ -16,9 +16,9 @@ var (
 
 type AppConfig struct {
 	Version int `json:"version"`
-	// Such as "30s" or "5m".
-	// Valid time units are "s", "m", "h".
-	// Values less than 10 seconds are not allowed.
+	// Such as "7s".
+	// Valid time units are "s".
+	// Values bigger than 10 seconds are not allowed.
 	Interval string `json:"interval"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
@@ -61,13 +61,13 @@ func GetInterval() time.Duration {
 	}
 	d, err := time.ParseDuration(ac.Interval)
 	if err == nil {
-		if d < res.DefaultInterval {
-			log.Warn("[CONFIG] interval is too short, use default interval: 1m")
+		if d > res.DefaultInterval {
+			log.Warn("[CONFIG] interval is too long, use default interval")
 			return res.DefaultInterval
 		}
 		return d
 	}
-	log.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
+	log.Warn("[CONFIG] parse interval failed: %v", err)
 	return res.DefaultInterval
 }
 

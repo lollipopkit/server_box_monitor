@@ -72,8 +72,10 @@
     //
     // type: webhook, ios, serverchan (more to come)
     // iface: interface for the push type
-    // success_body_regex: regex to match the response body
-    // success_code: response code to match
+    // body_regex: regex to match the response body
+    // code: response code to match
+    //
+    // {{key}} and {{value}} will be replaced with the key and value of the check
     "pushes": [
         {
             // This is a example for QQ Group message
@@ -113,14 +115,9 @@
                 "name": "ServerBox iOS App",
                 // You can get it from settings page of ServerBox iOS app
                 "token": "YOUR_TOKEN",
-                // {{key}} and {{value}} will be replaced with the key and value of the check
                 "title": "Server Notification",
-                // {{key}} and {{value}} will be replaced with the key and value of the check
                 "content": "{{key}}: {{value}}",
-                // Regex to match the response body
-                // If the response body matches the regex, the push is considered successful
                 "body_regex": ".*",
-                // If the response code equals, the push is considered successful
                 "code": 200
             }
         },

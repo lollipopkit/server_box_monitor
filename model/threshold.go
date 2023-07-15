@@ -32,13 +32,13 @@ func ParseToThreshold(s string) (*Threshold, error) {
 
 	} else if strings.HasSuffix(s, "/s") { // 10m/s
 		thresholdType = ThresholdTypeSpeed
-		// 10m/s -> m/s -> 3
-		endIdx = runesLen - 3
+		// 10m/s -> "/s" -> 2
+		endIdx = runesLen - 2
 
 	} else if util.Contains(sizeSuffix, string(runes[runesLen-1])) { // 10m
-		// 10m -> m -> 1
+		// 10m -> "" -> 0
 		thresholdType = ThresholdTypeSize
-		endIdx = runesLen - 1
+		endIdx = runesLen
 
 	} else if strings.HasSuffix(s, "c") { // 32c
 		thresholdType = ThresholdTypeTemperature
@@ -68,10 +68,23 @@ func ParseToThreshold(s string) (*Threshold, error) {
 		startIdx = 0
 	}
 
-	value, err := strconv.ParseFloat(string(runes[startIdx:endIdx]), 64)
-	if err != nil {
-		return nil, err
+	var value float64
+	var err error
+
+	switch thresholdType {
+	case ThresholdTypeSize, ThresholdTypeSpeed:
+		size, err := ParseToSize(string(runes[startIdx:endIdx]))
+		if err != nil {
+			return nil, err
+		}
+		value = float64(size)
+	default:
+		value, err = strconv.ParseFloat(string(runes[startIdx:endIdx]), 64)
+		if err != nil {
+			return nil, err
+		}
 	}
+	
 	return &Threshold{
 		ThresholdType: thresholdType,
 		Value:         value,
