@@ -84,7 +84,7 @@ func ParseToThreshold(s string) (*Threshold, error) {
 			return nil, err
 		}
 	}
-	
+
 	return &Threshold{
 		ThresholdType: thresholdType,
 		Value:         value,

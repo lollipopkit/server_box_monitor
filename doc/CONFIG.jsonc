@@ -1,10 +1,13 @@
 {
-    "version": 1,
+    "version": 2,
     // Interval of checking
     // Valid formats: 1s 1m 1h
     // Default: 30s
     // Values less than 10s will be ignored
     "interval": "1m",
+    // Rate limiter for msg push
+    // eg: 3/1m (3 times every minute), 1/10s (1 time every 10 seconds)
+    "rate": "1/10s",
     // Check rules
     //
     // Type: 
@@ -75,7 +78,7 @@
     // body_regex: regex to match the response body
     // code: response code to match
     //
-    // {{key}} and {{value}} will be replaced with the key and value of the check
+    // {{kvs}} will be replaced with the key and value of the check
     "pushes": [
         {
             // This is a example for QQ Group message
@@ -97,7 +100,7 @@
                     "action": "send_group_msg",
                     "params": {
                         "group_id": 123456789,
-                        "message": "ServerBox Notification\n{{key}}: {{value}}"
+                        "message": "ServerBox Notification\n{{kvs}}"
                     }
                 },
                 // Check push is successful or not:
@@ -116,7 +119,7 @@
                 // You can get it from settings page of ServerBox iOS app
                 "token": "YOUR_TOKEN",
                 "title": "Server Notification",
-                "content": "{{key}}: {{value}}",
+                "content": "{{kvs}}",
                 "body_regex": ".*",
                 "code": 200
             }
@@ -128,7 +131,7 @@
                 // Details please refer to https://sct.ftqq.com/
                 "sckey": "YOUR_SCKEY",
                 "title": "Server Notification",
-                "desp": "{{key}}: {{value}}",
+                "desp": "{{kvs}}",
                 "body_regex": ".*",
                 "code": 200
             }

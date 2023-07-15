@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/lollipopkit/gommon/log"
-	"github.com/lollipopkit/gommon/util"
+	os_ "github.com/lollipopkit/gommon/os"
+	"github.com/lollipopkit/gommon/rate"
 )
 
 var (
@@ -27,14 +28,17 @@ var (
 
 	AppConfigFileName = "config.json"
 	AppConfigPath     = filepath.Join(ServerBoxDirPath, AppConfigFileName)
+
+	DefaultRateLimiter = rate.NewLimiter[string](time.Second * 10, 1)
 )
 
 const (
 	DefaultInterval = time.Second * 7
+	MaxInterval     = time.Second * 10
 )
 
 func init() {
-	if !util.Exist(ServerBoxDirPath) {
+	if !os_.Exist(ServerBoxDirPath) {
 		err := os.MkdirAll(ServerBoxDirPath, 0755)
 		if err != nil {
 			log.Err("[INIT] Create dir error: %v", err)

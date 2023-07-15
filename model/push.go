@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
-	"github.com/lollipopkit/gommon/util"
+	"github.com/lollipopkit/gommon/http"
 )
 
 type Push struct {
@@ -54,19 +55,25 @@ func (p *Push) Push(args []*PushPair) error {
 // {{key}} {{value}}
 type PushFormat string
 type PushPair struct {
-	Key   string
-	Value string
+	key   string
+	value string
+	time string
+}
+func NewPushPair(key, value string) *PushPair {
+	return &PushPair{
+		key:   key,
+		value: value,
+		time: time.Now().Format("2006-01-02 15:04:05"),
+	}
 }
 
 func (pf PushFormat) Format(args []*PushPair) string {
 	ss := []string{}
 	for _, arg := range args {
-		s := string(pf)
-		s = strings.ReplaceAll(s, "{{key}}", arg.Key)
-		s = strings.ReplaceAll(s, "{{value}}", arg.Value)
-		ss = append(ss, s)
+		kv := fmt.Sprintf("%s\n%s: %s", arg.time, arg.key, arg.value)
+		ss = append(ss, kv)
 	}
-	return strings.Join(ss, "\n")
+	return strings.ReplaceAll(string(pf), "{{kvs}}", strings.Join(ss, "\n"))
 }
 
 type PushType string
@@ -83,25 +90,24 @@ type PushIface interface {
 
 type PushIfaceIOS struct {
 	Token     string     `json:"token"`
-	Title     PushFormat `json:"title"`
+	Title     string `json:"title"`
 	Content   PushFormat `json:"content"`
 	BodyRegex string     `json:"body_regex"`
 	Code      int        `json:"code"`
 }
 
 func (p PushIfaceIOS) push(args []*PushPair) error {
-	title := p.Title.Format(args)
 	content := p.Content.Format(args)
 	body := map[string]string{
 		"token":   p.Token,
-		"title":   title,
+		"title":   p.Title,
 		"content": content,
 	}
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
-	resp, code, err := util.HttpDo(
+	resp, code, err := http.Do(
 		"POST",
 		"https://push.lolli.tech/v1/ios",
 		bodyBytes,
@@ -137,9 +143,10 @@ type PushIfaceWebhook struct {
 
 func (p PushIfaceWebhook) push(args []*PushPair) error {
 	body := PushFormat(p.Body).Format(args)
+	println(body)
 	switch p.Method {
 	case "GET", "POST":
-		resp, code, err := util.HttpDo(p.Method, p.Url, body, p.Headers)
+		resp, code, err := http.Do(p.Method, p.Url, body, p.Headers)
 		if err != nil {
 			return err
 		}
@@ -162,17 +169,16 @@ func (p PushIfaceWebhook) push(args []*PushPair) error {
 
 type PushIfaceServerChan struct {
 	SCKey     string     `json:"sckey"`
-	Title     PushFormat `json:"title"`
+	Title     string `json:"title"`
 	Desp      PushFormat `json:"desp"`
 	BodyRegex string     `json:"body_regex"`
 	Code      int        `json:"code"`
 }
 
 func (p PushIfaceServerChan) push(args []*PushPair) error {
-	title := p.Title.Format(args)
 	desp := p.Desp.Format(args)
-	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKey, title, desp)
-	resp, code, err := util.HttpDo("GET", url, nil, nil)
+	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKey, p.Title, desp)
+	resp, code, err := http.Do("GET", url, nil, nil)
 	if err != nil {
 		return err
 	}

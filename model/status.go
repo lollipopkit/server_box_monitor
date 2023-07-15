@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/lollipopkit/gommon/log"
-	"github.com/lollipopkit/gommon/util"
+	os_ "github.com/lollipopkit/gommon/os"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
 
@@ -96,14 +96,14 @@ func (ns *networkStatus) TransmitSpeed() (Size, error) {
 		return 0, ErrNotReady
 	}
 	diff := float64(ns.TimeSequence.New.Transmit - ns.TimeSequence.Old.Transmit)
-	return Size(diff / GetIntervalInSeconds()), nil
+	return Size(diff / CheckInterval.Seconds()), nil
 }
 func (ns *networkStatus) ReceiveSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
 	diff := float64(ns.TimeSequence.New.Receive - ns.TimeSequence.Old.Receive)
-	return Size(diff / GetIntervalInSeconds()), nil
+	return Size(diff / CheckInterval.Seconds()), nil
 }
 
 type AllNetworkStatus []networkStatus
@@ -132,7 +132,7 @@ func (nss AllNetworkStatus) ReceiveSpeed() (Size, error) {
 }
 
 func RefreshStatus() error {
-	output, _ := util.Execute("bash", res.ServerBoxShellPath)
+	output, _ := os_.Execute("bash", res.ServerBoxShellPath)
 	err := os.WriteFile(filepath.Join(res.ServerBoxDirPath, "shell_output.log"), []byte(output), 0644)
 	if err != nil {
 		log.Warn("[STATUS] write shell output log failed: %s", err)

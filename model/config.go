@@ -3,15 +3,20 @@ package model
 import (
 	"encoding/json"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/lollipopkit/gommon/log"
-	"github.com/lollipopkit/gommon/util"
+	os_ "github.com/lollipopkit/gommon/os"
+	"github.com/lollipopkit/gommon/rate"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
 
 var (
-	Config = &AppConfig{}
+	Config = new(AppConfig)
+	CheckInterval time.Duration
+	RateLimiter *rate.RateLimiter[string]
 )
 
 type AppConfig struct {
@@ -20,12 +25,15 @@ type AppConfig struct {
 	// Valid time units are "s".
 	// Values bigger than 10 seconds are not allowed.
 	Interval string `json:"interval"`
+	Rate string `json:"rate"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
 }
 
 func ReadAppConfig() error {
-	if !util.Exist(res.AppConfigPath) {
+	defer initInterval()
+	defer initRateLimiter()
+	if !os_.Exist(res.AppConfigPath) {
 		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
 		if err != nil {
 			log.Err("[CONFIG] marshal default app config failed: %v", err)
@@ -54,25 +62,41 @@ func ReadAppConfig() error {
 	return err
 }
 
-func GetInterval() time.Duration {
-	ac := DefaultappConfig
-	if Config != nil {
-		ac = Config
-	}
-	d, err := time.ParseDuration(ac.Interval)
+func initInterval() {
+	d, err := time.ParseDuration(Config.Interval)
 	if err == nil {
-		if d > res.DefaultInterval {
-			log.Warn("[CONFIG] interval is too long, use default interval")
-			return res.DefaultInterval
+		if d > res.MaxInterval || d < time.Second {
+			log.Warn("[CONFIG] use default interval")
+			CheckInterval = res.DefaultInterval
+			return
 		}
-		return d
+		CheckInterval = d
+		return
 	}
 	log.Warn("[CONFIG] parse interval failed: %v", err)
-	return res.DefaultInterval
+	CheckInterval = res.DefaultInterval
 }
 
-func GetIntervalInSeconds() float64 {
-	return GetInterval().Seconds()
+func initRateLimiter() {
+	splited := strings.Split(Config.Rate, "/")
+	if len(splited) != 2 {
+		log.Warn("[CONFIG] parse rate failed")
+		RateLimiter = res.DefaultRateLimiter
+		return
+	}
+	times, err := strconv.Atoi(splited[0])
+	if err != nil {
+		log.Warn("[CONFIG] parse rate failed: %v", err)
+		RateLimiter = res.DefaultRateLimiter
+		return
+	}
+	duration, err := time.ParseDuration(splited[1])
+	if err != nil {
+		log.Warn("[CONFIG] parse rate failed: %v", err)
+		RateLimiter = res.DefaultRateLimiter
+		return
+	}
+	RateLimiter = rate.NewLimiter[string](duration, times)
 }
 
 var (
@@ -116,8 +140,9 @@ var (
 	defaultServerChanIfaceBytes, _ = json.Marshal(defaultServerChanIface)
 
 	DefaultappConfig = &AppConfig{
-		Version:  1,
-		Interval: "30s",
+		Version:  2,
+		Interval: "7s",
+		Rate:     "1/1m",
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,
@@ -135,16 +160,6 @@ var (
 				Type:  PushTypeWebhook,
 				Name:  "QQ Group",
 				Iface: defaultWebhookIfaceBytes,
-			},
-			{
-				Type:  PushTypeIOS,
-				Name:  "My iPhone",
-				Iface: defaultIOSIfaceBytes,
-			},
-			{
-				Type:  PushTypeServerChan,
-				Name:  "ServerChan",
-				Iface: defaultServerChanIfaceBytes,
 			},
 		},
 	}

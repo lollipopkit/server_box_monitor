@@ -46,7 +46,7 @@ func runCheck() {
 		panic(err)
 	}
 
-	for range time.NewTicker(model.GetInterval()).C {
+	for range time.NewTicker(model.CheckInterval).C {
 		err = model.RefreshStatus()
 		status := model.Status
 		if err != nil {
@@ -77,11 +77,17 @@ func runCheck() {
 
 		pushPairsLock.RLock()
 		for _, push := range model.Config.Pushes {
+			if !model.RateLimiter.Check(push.Name) {
+				log.Warn("[PUSH] %s rate limit reached", push.Name)
+				continue
+			}
 			err := push.Push(pushPairs)
 			if err != nil {
 				log.Warn("[PUSH] %s error: %v", push.Name, err)
 				continue
 			}
+			// 仅推送成功才计数
+			model.RateLimiter.Acquire(push.Name)
 			log.Suc("[PUSH] %s success", push.Name)
 		}
 		pushPairsLock.RUnlock()
@@ -104,5 +110,5 @@ func runWeb() {
 
 	e.GET("/status", web.Status)
 
-	e.Logger.Fatal(e.Start(":3770"))
+	e.Logger.Fatal(e.Start("0.0.0.0:3770"))
 }
