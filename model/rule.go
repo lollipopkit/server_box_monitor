@@ -232,7 +232,6 @@ func (r *Rule) shouldNotifyDisk(s []diskStatus, t *Threshold) (bool, *PushPair, 
 }
 func (r *Rule) shouldNotifyNetwork(s []networkStatus, t *Threshold) (bool, *PushPair, error) {
 	if len(s) == 0 {
-		// utils.Warn("network is not valid, skip this rule")
 		return false, nil, nil
 	}
 

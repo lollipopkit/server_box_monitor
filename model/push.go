@@ -11,9 +11,9 @@ import (
 )
 
 type Push struct {
-	Type      PushType        `json:"type"`
-	Name      string          `json:"name"`
-	Iface     json.RawMessage `json:"iface"`
+	Type  PushType        `json:"type"`
+	Name  string          `json:"name"`
+	Iface json.RawMessage `json:"iface"`
 }
 
 func (p *Push) GetIface() (PushIface, error) {
@@ -82,11 +82,11 @@ type PushIface interface {
 }
 
 type PushIfaceIOS struct {
-	Token   string     `json:"token"`
-	Title   PushFormat `json:"title"`
-	Content PushFormat `json:"content"`
-	BodyRegex string          `json:"body_regex"`
-	Code      int             `json:"code"`
+	Token     string     `json:"token"`
+	Title     PushFormat `json:"title"`
+	Content   PushFormat `json:"content"`
+	BodyRegex string     `json:"body_regex"`
+	Code      int        `json:"code"`
 }
 
 func (p PushIfaceIOS) push(args []*PushPair) error {
@@ -127,12 +127,12 @@ func (p PushIfaceIOS) push(args []*PushPair) error {
 }
 
 type PushIfaceWebhook struct {
-	Url     string            `json:"url"`
-	Headers map[string]string `json:"headers"`
-	Method  string            `json:"method"`
-	Body    json.RawMessage   `json:"body"`
-	BodyRegex string          `json:"body_regex"`
-	Code      int             `json:"code"`
+	Url       string            `json:"url"`
+	Headers   map[string]string `json:"headers"`
+	Method    string            `json:"method"`
+	Body      json.RawMessage   `json:"body"`
+	BodyRegex string            `json:"body_regex"`
+	Code      int               `json:"code"`
 }
 
 func (p PushIfaceWebhook) push(args []*PushPair) error {
@@ -161,11 +161,11 @@ func (p PushIfaceWebhook) push(args []*PushPair) error {
 }
 
 type PushIfaceServerChan struct {
-	SCKey string     `json:"sckey"`
-	Title PushFormat `json:"title"`
-	Desp  PushFormat `json:"desp"`
-	BodyRegex string          `json:"body_regex"`
-	Code      int             `json:"code"`
+	SCKey     string     `json:"sckey"`
+	Title     PushFormat `json:"title"`
+	Desp      PushFormat `json:"desp"`
+	BodyRegex string     `json:"body_regex"`
+	Code      int        `json:"code"`
 }
 
 func (p PushIfaceServerChan) push(args []*PushPair) error {

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/lollipopkit/gommon/term"
+	"github.com/lollipopkit/gommon/log"
 	"github.com/lollipopkit/server_box_monitor/res"
 	"github.com/urfave/cli/v2"
 )
@@ -30,6 +30,6 @@ func Run() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		term.Err(err.Error())
+		log.Err(err.Error())
 	}
 }

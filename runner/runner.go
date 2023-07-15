@@ -6,41 +6,45 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lollipopkit/gommon/term"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/lollipopkit/gommon/log"
 	"github.com/lollipopkit/server_box_monitor/model"
 	"github.com/lollipopkit/server_box_monitor/res"
+	"github.com/lollipopkit/server_box_monitor/web"
 )
 
 var (
 	pushPairs     = []*model.PushPair{}
 	pushPairsLock = new(sync.RWMutex)
-	lastPushTime time.Time
+	lastPushTime  time.Time
 	checkInterval = time.Second * 3
 )
 
 func init() {
 	scriptBytes, err := res.Files.ReadFile(res.ServerBoxShellFileName)
 	if err != nil {
-		term.Err("[INIT] Read embed file error: %v", err)
+		log.Err("[INIT] Read embed file error: %v", err)
 		panic(err)
 	}
 	err = os.WriteFile(res.ServerBoxShellPath, scriptBytes, 0755)
 	if err != nil {
-		term.Err("[INIT] Write script file error: %v", err)
+		log.Err("[INIT] Write script file error: %v", err)
 		panic(err)
 	}
 }
 
 func Start() {
-	go run()
+	go runMonitor()
+	go runWeb()
 	// 阻塞主线程
 	select {}
 }
 
-func run() {
+func runMonitor() {
 	err := model.ReadAppConfig()
 	if err != nil {
-		term.Err("[CONFIG] Read app config error: %v", err)
+		log.Err("[CONFIG] Read app config error: %v", err)
 		panic(err)
 	}
 
@@ -48,7 +52,7 @@ func run() {
 		err = model.RefreshStatus()
 		status := model.Status
 		if err != nil {
-			term.Warn("[STATUS] Get status error: %v", err)
+			log.Warn("[STATUS] Get status error: %v", err)
 			continue
 		}
 
@@ -56,7 +60,7 @@ func run() {
 			notify, pushPair, err := rule.ShouldNotify(status)
 			if err != nil {
 				if !strings.Contains(err.Error(), "not ready") {
-					term.Warn("[RULE] %s error: %v", rule.Id(), err)
+					log.Warn("[RULE] %s error: %v", rule.Id(), err)
 				}
 			}
 
@@ -70,21 +74,21 @@ func run() {
 		if len(pushPairs) == 0 {
 			continue
 		}
-		
+
 		if time.Now().Sub(lastPushTime) < model.GetInterval() {
 			continue
 		}
 
-		term.Info("[PUSH] %d to push", len(pushPairs))
+		log.Info("[PUSH] %d to push", len(pushPairs))
 
 		pushPairsLock.RLock()
 		for _, push := range model.Config.Pushes {
 			err := push.Push(pushPairs)
 			if err != nil {
-				term.Warn("[PUSH] %s error: %v", push.Name, err)
+				log.Warn("[PUSH] %s error: %v", push.Name, err)
 				continue
 			}
-			term.Suc("[PUSH] %s success", push.Name)
+			log.Suc("[PUSH] %s success", push.Name)
 		}
 		pushPairsLock.RUnlock()
 
@@ -92,4 +96,19 @@ func run() {
 		pushPairs = []*model.PushPair{}
 		pushPairsLock.Unlock()
 	}
+}
+
+func runWeb() {
+	e := echo.New()
+
+	e.Use(middleware.Recover())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(3)))
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{},
+	}))
+	e.HideBanner = true
+
+	e.GET("/status", web.Status)
+
+	e.Logger.Fatal(e.Start(":3770"))
 }

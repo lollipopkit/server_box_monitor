@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/lollipopkit/gommon/term"
+	"github.com/lollipopkit/gommon/log"
 	"github.com/lollipopkit/gommon/util"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
@@ -28,12 +28,12 @@ func ReadAppConfig() error {
 	if !util.Exist(res.AppConfigPath) {
 		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
 		if err != nil {
-			term.Err("[CONFIG] marshal default app config failed: %v", err)
+			log.Err("[CONFIG] marshal default app config failed: %v", err)
 			return err
 		}
 		err = os.WriteFile(res.AppConfigPath, configBytes, 0644)
 		if err != nil {
-			term.Err("[CONFIG] write default app config failed: %v", err)
+			log.Err("[CONFIG] write default app config failed: %v", err)
 			return err
 		}
 		Config = DefaultappConfig
@@ -42,14 +42,14 @@ func ReadAppConfig() error {
 
 	configBytes, err := os.ReadFile(res.AppConfigPath)
 	if err != nil {
-		term.Err("[CONFIG] read app config failed: %v", err)
+		log.Err("[CONFIG] read app config failed: %v", err)
 		return err
 	}
 	err = json.Unmarshal(configBytes, Config)
 	if err != nil {
-		term.Err("[CONFIG] unmarshal app config failed: %v", err)
+		log.Err("[CONFIG] unmarshal app config failed: %v", err)
 	} else if Config.Version < DefaultappConfig.Version {
-		term.Warn("[CONFIG] app config version is too old, please update it")
+		log.Warn("[CONFIG] app config version is too old, please update it")
 	}
 	return err
 }
@@ -62,12 +62,12 @@ func GetInterval() time.Duration {
 	d, err := time.ParseDuration(ac.Interval)
 	if err == nil {
 		if d < res.DefaultInterval {
-			term.Warn("[CONFIG] interval is too short, use default interval: 1m")
+			log.Warn("[CONFIG] interval is too short, use default interval: 1m")
 			return res.DefaultInterval
 		}
 		return d
 	}
-	term.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
+	log.Warn("[CONFIG] parse interval failed: %v, use default interval: 1m", err)
 	return res.DefaultInterval
 }
 
@@ -90,26 +90,26 @@ var (
 			"Content-Type":  "application/json",
 			"Authorization": "Bearer YOUR_SECRET",
 		},
-		Method: "POST",
-		Body:   defaultWekhookBodyBytes,
+		Method:    "POST",
+		Body:      defaultWekhookBodyBytes,
 		BodyRegex: ".*",
 		Code:      200,
 	}
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
 
 	defaultIOSIface = PushIfaceIOS{
-		Token:   "YOUR_TOKEN",
-		Title:   "Server Notification",
-		Content: "{{key}}: {{value}}",
+		Token:     "YOUR_TOKEN",
+		Title:     "Server Notification",
+		Content:   "{{key}}: {{value}}",
 		BodyRegex: ".*",
 		Code:      200,
 	}
 	defaultIOSIfaceBytes, _ = json.Marshal(defaultIOSIface)
 
 	defaultServerChanIface = PushIfaceServerChan{
-		SCKey: "YOUR_SCKEY",
-		Title: "Server Notification",
-		Desp:  "{{key}}: {{value}}",
+		SCKey:     "YOUR_SCKEY",
+		Title:     "Server Notification",
+		Desp:      "{{key}}: {{value}}",
 		BodyRegex: ".*",
 		Code:      200,
 	}
@@ -132,19 +132,19 @@ var (
 		},
 		Pushes: []Push{
 			{
-				Type:      PushTypeWebhook,
-				Name:      "QQ Group",
-				Iface:     defaultWebhookIfaceBytes,
+				Type:  PushTypeWebhook,
+				Name:  "QQ Group",
+				Iface: defaultWebhookIfaceBytes,
 			},
 			{
-				Type:      PushTypeIOS,
-				Name:      "My iPhone",
-				Iface:     defaultIOSIfaceBytes,
+				Type:  PushTypeIOS,
+				Name:  "My iPhone",
+				Iface: defaultIOSIfaceBytes,
 			},
 			{
-				Type:      PushTypeServerChan,
-				Name:      "ServerChan",
-				Iface:     defaultServerChanIfaceBytes,
+				Type:  PushTypeServerChan,
+				Name:  "ServerChan",
+				Iface: defaultServerChanIfaceBytes,
 			},
 		},
 	}

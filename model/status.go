@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lollipopkit/gommon/term"
+	"github.com/lollipopkit/gommon/log"
 	"github.com/lollipopkit/gommon/util"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
@@ -106,11 +106,36 @@ func (ns *networkStatus) ReceiveSpeed() (Size, error) {
 	return Size(diff / GetIntervalInSeconds()), nil
 }
 
+type AllNetworkStatus []networkStatus
+
+func (nss AllNetworkStatus) TransmitSpeed() (Size, error) {
+	var sum float64
+	for _, ns := range nss {
+		speed, err := ns.TransmitSpeed()
+		if err != nil {
+			return 0, err
+		}
+		sum += float64(speed)
+	}
+	return Size(sum), nil
+}
+func (nss AllNetworkStatus) ReceiveSpeed() (Size, error) {
+	var sum float64
+	for _, ns := range nss {
+		speed, err := ns.ReceiveSpeed()
+		if err != nil {
+			return 0, err
+		}
+		sum += float64(speed)
+	}
+	return Size(sum), nil
+}
+
 func RefreshStatus() error {
 	output, _ := util.Execute("bash", res.ServerBoxShellPath)
 	err := os.WriteFile(filepath.Join(res.ServerBoxDirPath, "shell_output.log"), []byte(output), 0644)
 	if err != nil {
-		term.Warn("[STATUS] write shell output log failed: %s", err)
+		log.Warn("[STATUS] write shell output log failed: %s", err)
 	}
 	return ParseStatus(output)
 }
@@ -126,23 +151,23 @@ func ParseStatus(s string) error {
 	}
 	err := parseNetworkStatus(segments[1])
 	if err != nil {
-		term.Warn("parse network status failed: %s", err)
+		log.Warn("parse network status failed: %s", err)
 	}
 	err = parseCPUStatus(segments[2])
 	if err != nil {
-		term.Warn("parse cpu status failed: %s", err)
+		log.Warn("parse cpu status failed: %s", err)
 	}
 	err = parseDiskStatus(segments[3])
 	if err != nil {
-		term.Warn("parse disk status failed: %s", err)
+		log.Warn("parse disk status failed: %s", err)
 	}
 	err = parseMemAndSwapStatus(segments[4])
 	if err != nil {
-		term.Warn("parse mem status failed: %s", err)
+		log.Warn("parse mem status failed: %s", err)
 	}
 	err = parseTemperatureStatus(segments[5], segments[6])
 	if err != nil {
-		term.Warn("parse temperature status failed: %s", err)
+		log.Warn("parse temperature status failed: %s", err)
 	}
 	return nil
 }
