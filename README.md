@@ -10,18 +10,24 @@ It is a part of [ServerBox](https://github.com/lollipopkit/flutter_server_box) p
 <table>
   <tr>
     <td>
-	    <h5 align="center">iOS</h5>
+	    <h5 align="center">iOS push</h5>
     </td>
     <td>
-	    <h5 align="center">Webhook (QQ)</h5>
+	    <h5 align="center">Webhook push (QQ)</h5>
+    </td>
+    <td>
+	    <h5 align="center">iOS widget</h5>
     </td>
   </tr>
   <tr>
     <td>
-	    <img width="167px" src="doc/imgs/ios.png">
+	    <img width="107px" src="doc/imgs/ios-push.png">
     </td>
     <td>
-	    <img width="477px" src="doc/imgs/webhook.png">
+	    <img width="307px" src="doc/imgs/webhook.png">
+    </td>
+    <td>
+	    <img width="197px" src="doc/imgs/ios-widget.png">
     </td>
   </tr>
 </table>

@@ -9,18 +9,24 @@
 <table>
   <tr>
     <td>
-	    <h5 align="center">iOS</h5>
+	    <h5 align="center">iOS 推送</h5>
     </td>
     <td>
-	    <h5 align="center">Webhook (QQ)</h5>
+	    <h5 align="center">Webhook 推送 (QQ)</h5>
+    </td>
+    <td>
+	    <h5 align="center">iOS 桌面部件</h5>
     </td>
   </tr>
   <tr>
     <td>
-	    <img width="167px" src="doc/imgs/ios.png">
+	    <img width="107px" src="doc/imgs/ios-push.png">
     </td>
     <td>
-	    <img width="477px" src="doc/imgs/webhook.png">
+	    <img width="307px" src="doc/imgs/webhook.png">
+    </td>
+    <td>
+	    <img width="197px" src="doc/imgs/ios-widget.png">
     </td>
   </tr>
 </table>
