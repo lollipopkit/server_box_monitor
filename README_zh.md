@@ -5,6 +5,26 @@
 这是 [ServerBox](https://github.com/lollipopkit/flutter_server_box) 项目的一部分.
 **正处于活跃开发中，你可能需要在更新后重新配置.**
 
+## 🖥️ 截图
+<table>
+  <tr>
+    <td>
+	    <h5 align="center">iOS</h5>
+    </td>
+    <td>
+	    <h5 align="center">Webhook (QQ)</h5>
+    </td>
+  </tr>
+  <tr>
+    <td>
+	    <img width="167px" src="doc/imgs/ios.png">
+    </td>
+    <td>
+	    <img width="477px" src="doc/imgs/webhook.png">
+    </td>
+  </tr>
+</table>
+
 ## 📖 使用方法
 1. 这里有多种方式安装.
    - `Docker`:

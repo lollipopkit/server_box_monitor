@@ -5,6 +5,27 @@ This app runs on server end and monitors the server status.
 It is a part of [ServerBox](https://github.com/lollipopkit/flutter_server_box) project.  
 **It's under active development, you may need to reconfig it after upgrading.**
 
+
+## 🖥️ Screenshots
+<table>
+  <tr>
+    <td>
+	    <h5 align="center">iOS</h5>
+    </td>
+    <td>
+	    <h5 align="center">Webhook (QQ)</h5>
+    </td>
+  </tr>
+  <tr>
+    <td>
+	    <img width="167px" src="doc/imgs/ios.png">
+    </td>
+    <td>
+	    <img width="477px" src="doc/imgs/webhook.png">
+    </td>
+  </tr>
+</table>
+
 ## 📖 Usage
 1. There are serveral ways to install it.
    - `Docker`:
