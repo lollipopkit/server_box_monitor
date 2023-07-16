@@ -35,6 +35,8 @@ var (
 const (
 	DefaultInterval = time.Second * 7
 	MaxInterval     = time.Second * 10
+
+	PushFormatLocator = "{{msg}}"
 )
 
 func init() {

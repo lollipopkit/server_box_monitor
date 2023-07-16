@@ -78,7 +78,8 @@
     // body_regex: regex to match the response body
     // code: response code to match
     //
-    // {{kvs}} will be replaced with the key and value of the check
+    // Format args:
+    // "{{msg}}" will be replaced with the message of the check result
     "pushes": [
         {
             // This is a example for QQ Group message
@@ -100,7 +101,7 @@
                     "action": "send_group_msg",
                     "params": {
                         "group_id": 123456789,
-                        "message": "ServerBox Notification\n{{kvs}}"
+                        "message": "Server name\n{{msg}}"
                     }
                 },
                 // Check push is successful or not:
@@ -118,8 +119,8 @@
                 "name": "ServerBox iOS App",
                 // You can get it from settings page of ServerBox iOS app
                 "token": "YOUR_TOKEN",
-                "title": "Server Notification",
-                "content": "{{kvs}}",
+                "title": "Server name",
+                "content": "{{msg}}",
                 "body_regex": ".*",
                 "code": 200
             }
@@ -131,7 +132,7 @@
                 // Details please refer to https://sct.ftqq.com/
                 "sckey": "YOUR_SCKEY",
                 "title": "Server Notification",
-                "desp": "{{kvs}}",
+                "desp": "{{msg}}",
                 "body_regex": ".*",
                 "code": 200
             }

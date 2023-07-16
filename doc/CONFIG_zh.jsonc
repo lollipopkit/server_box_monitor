@@ -75,6 +75,9 @@
     // 接口 iface: 推送类型的接口
     // body_regex: 正则表达式匹配响应体
     // code: 响应码匹配
+    //
+    // 格式化参数：
+    // "{{msg}}" 将被替换为监测结果的消息
     "pushes": [
         {
             // 这是一个推送到QQ群的例子
@@ -96,7 +99,7 @@
                     "action": "send_group_msg",
                     "params": {
                         "group_id": 123456789,
-                        "message": "ServerBox Notification\n{{key}}: {{value}}"
+                        "message": "服务器1 提示\n{{msg}}"
                     }
                 },
                 // 推送校验：
@@ -114,8 +117,8 @@
                 "name": "ServerBox iOS App",
                 // 你可以从 ServerBox iOS app 的 设置 中获取 token
                 "token": "YOUR_TOKEN",
-                "title": "Server Notification",
-                "content": "{{key}}: {{value}}",
+                "title": "服务器1 提示",
+                "content": "{{msg}}",
                 "body_regex": ".*",
                 "code": 200
             }
@@ -126,8 +129,8 @@
                 "name": "Server酱",
                 // 具体配置请参考 https://sct.ftqq.com/
                 "sckey": "YOUR_SCKEY",
-                "title": "Server Notification",
-                "desp": "{{key}}: {{value}}",
+                "title": "服务器1 提示",
+                "desp": "{{msg}}",
                 "body_regex": ".*",
                 "code": 200
             }

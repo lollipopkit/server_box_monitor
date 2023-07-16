@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lollipopkit/gommon/http"
+	"github.com/lollipopkit/server_box_monitor/res"
 )
 
 type Push struct {
@@ -74,7 +75,10 @@ func (pf PushFormat) Format(args []*PushPair) string {
 		kv := fmt.Sprintf(`%s\n%s: %s`, arg.time, arg.key, arg.value)
 		ss = append(ss, kv)
 	}
-	return strings.Replace(string(pf), "{{kvs}}", strings.Join(ss, `\n`), 1)
+	return strings.Replace(
+		string(pf), 
+		res.PushFormatLocator, 
+		strings.Join(ss, `\n`), 1)
 }
 
 type PushType string

@@ -34,7 +34,7 @@ func ReadAppConfig() error {
 	defer initInterval()
 	defer initRateLimiter()
 	if !sys.Exist(res.AppConfigPath) {
-		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
+		configBytes, err := json.MarshalIndent(DefaultAppConfig, "", "\t")
 		if err != nil {
 			log.Err("[CONFIG] marshal default app config failed: %v", err)
 			return err
@@ -44,7 +44,7 @@ func ReadAppConfig() error {
 			log.Err("[CONFIG] write default app config failed: %v", err)
 			return err
 		}
-		Config = DefaultappConfig
+		Config = DefaultAppConfig
 		return nil
 	}
 
@@ -56,7 +56,7 @@ func ReadAppConfig() error {
 	err = json.Unmarshal(configBytes, Config)
 	if err != nil {
 		log.Err("[CONFIG] unmarshal app config failed: %v", err)
-	} else if Config.Version < DefaultappConfig.Version {
+	} else if Config.Version < DefaultAppConfig.Version {
 		log.Warn("[CONFIG] app config version is too old, new config will be generated")
 		// Backup old config
 		err = os.WriteFile(res.AppConfigPath+".bak", configBytes, 0644)
@@ -65,7 +65,7 @@ func ReadAppConfig() error {
 			return err
 		}
 		// Generate new config
-		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
+		configBytes, err := json.MarshalIndent(DefaultAppConfig, "", "\t")
 		if err != nil {
 			panic(err)
 		}
@@ -121,7 +121,7 @@ var (
 		"action": "send_group_msg",
 		"params": map[string]interface{}{
 			"group_id": 123456789,
-			"message":  "ServerBox Notification\n{{kvs}}",
+			"message":  "Server1\n"+res.PushFormatLocator,
 		},
 	}
 	defaultWekhookBodyBytes, _ = json.Marshal(defaultWebhookBody)
@@ -138,7 +138,7 @@ var (
 	}
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
 
-	DefaultappConfig = &AppConfig{
+	DefaultAppConfig = &AppConfig{
 		Version:  2,
 		Interval: "7s",
 		Rate:     "1/1m",

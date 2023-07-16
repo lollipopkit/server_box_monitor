@@ -31,7 +31,7 @@ type Rule struct {
 }
 
 func (r *Rule) Id() string {
-	return fmt.Sprintf("[%s %s %s]", r.MonitorType, r.Threshold, r.Matcher)
+	return fmt.Sprintf("Rule(%s %s %s)", r.MonitorType, r.Threshold, r.Matcher)
 }
 func (r *Rule) ShouldNotify(s *serverStatus) (bool, *PushPair, error) {
 	t, err := ParseToThreshold(r.Threshold)
