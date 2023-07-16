@@ -26,6 +26,7 @@ type AppConfig struct {
 	// Values bigger than 10 seconds are not allowed.
 	Interval string `json:"interval"`
 	Rate     string `json:"rate"`
+	Name string `json:"name"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
 }
@@ -142,6 +143,7 @@ var (
 		Version:  2,
 		Interval: "7s",
 		Rate:     "1/1m",
+		Name: "Server1",
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,

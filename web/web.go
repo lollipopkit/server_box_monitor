@@ -16,14 +16,14 @@ func Status(c echo.Context) error {
 	}
 	mem := ""
 	if s.Mem != nil {
-		mem = fmt.Sprintf("%s/%s", s.Mem.Used.String(), s.Mem.Total.String())
+		mem = fmt.Sprintf("%s / %s", s.Mem.Used.String(), s.Mem.Total.String())
 	}
 	net := ""
 	if len(s.Network) > 0 {
 		all := model.AllNetworkStatus(s.Network)
 		rx, _ := all.ReceiveSpeed()
 		tx, _ := all.TransmitSpeed()
-		net = fmt.Sprintf("%s⬇ %s⬆", rx.String(), tx.String())
+		net = fmt.Sprintf("%s / %s", rx.String(), tx.String())
 	}
 	disk := ""
 	if len(s.Disk) > 0 {
@@ -34,14 +34,15 @@ func Status(c echo.Context) error {
 				break
 			}
 		}
-		disk = fmt.Sprintf("%s/%s", d.Used.String(), d.Total.String())
+		disk = fmt.Sprintf("%s / %s", d.Used.String(), d.Total.String())
 	}
 
-	status := map[string]any{
+	status := map[string]string{
+		"name": model.Config.Name,
 		"cpu":  cpu,
 		"mem":  mem,
 		"net":  net,
 		"disk": disk,
 	}
-	return c.JSON(200, status)
+	return ok(c, status)
 }

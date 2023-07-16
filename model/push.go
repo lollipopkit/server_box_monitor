@@ -65,13 +65,16 @@ func NewPushPair(key, value string) *PushPair {
 	return &PushPair{
 		key:   key,
 		value: value,
-		time:  time.Now().Format("2006-01-02 15:04:05"),
+		time:  time.Now().Format("15:04:05"),
 	}
 }
 
 func (pf PushFormat) Format(args []*PushPair) string {
 	ss := []string{}
 	for _, arg := range args {
+		if len(arg.time) == 0 {
+			arg.time = time.Now().Format("15:04:05")
+		}
 		kv := fmt.Sprintf(`%s\n%s: %s`, arg.time, arg.key, arg.value)
 		ss = append(ss, kv)
 	}

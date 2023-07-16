@@ -8,6 +8,8 @@
     // Rate limiter for msg push
     // eg: 3/1m (3 times every minute), 1/10s (1 time every 10 seconds)
     "rate": "1/10s",
+    // Name of this host
+	"name": "Server 1",
     // Check rules
     //
     // Type: 
