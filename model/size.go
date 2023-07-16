@@ -20,7 +20,7 @@ func (s Size) String() string {
 	temp := float64(s)
 	for {
 		if temp < programKilo || nth == len(sizeSuffix)-1 {
-			return fmt.Sprintf("%.1f %s", temp, sizeSuffix[nth])
+			return fmt.Sprintf("%.1f%s", temp, sizeSuffix[nth])
 		}
 		temp = temp / programKilo
 		nth++
