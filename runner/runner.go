@@ -75,13 +75,14 @@ func runCheck() {
 
 		log.Info("[PUSH] %d to push", len(pushPairs))
 
-		pushPairsLock.RLock()
 		for _, push := range model.Config.Pushes {
 			if !model.RateLimiter.Check(push.Name) {
 				log.Warn("[PUSH] %s rate limit reached", push.Name)
 				continue
 			}
+			pushPairsLock.RLock()
 			err := push.Push(pushPairs)
+			pushPairsLock.RUnlock()
 			if err != nil {
 				log.Warn("[PUSH] %s error: %v", push.Name, err)
 				continue
@@ -89,12 +90,11 @@ func runCheck() {
 			// 仅推送成功才计数
 			model.RateLimiter.Acquire(push.Name)
 			log.Suc("[PUSH] %s success", push.Name)
-		}
-		pushPairsLock.RUnlock()
 
-		pushPairsLock.Lock()
-		pushPairs = []*model.PushPair{}
-		pushPairsLock.Unlock()
+			pushPairsLock.Lock()
+			pushPairs = pushPairs[:0]
+			pushPairsLock.Unlock()
+		}
 	}
 }
 

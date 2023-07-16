@@ -57,23 +57,24 @@ type PushFormat string
 type PushPair struct {
 	key   string
 	value string
-	time string
+	time  string
 }
+
 func NewPushPair(key, value string) *PushPair {
 	return &PushPair{
 		key:   key,
 		value: value,
-		time: time.Now().Format("2006-01-02 15:04:05"),
+		time:  time.Now().Format("2006-01-02 15:04:05"),
 	}
 }
 
 func (pf PushFormat) Format(args []*PushPair) string {
 	ss := []string{}
 	for _, arg := range args {
-		kv := fmt.Sprintf("%s\n%s: %s", arg.time, arg.key, arg.value)
+		kv := fmt.Sprintf(`%s\n%s: %s`, arg.time, arg.key, arg.value)
 		ss = append(ss, kv)
 	}
-	return strings.ReplaceAll(string(pf), "{{kvs}}", strings.Join(ss, "\n"))
+	return strings.Replace(string(pf), "{{kvs}}", strings.Join(ss, `\n`), 1)
 }
 
 type PushType string
@@ -90,7 +91,7 @@ type PushIface interface {
 
 type PushIfaceIOS struct {
 	Token     string     `json:"token"`
-	Title     string `json:"title"`
+	Title     string     `json:"title"`
 	Content   PushFormat `json:"content"`
 	BodyRegex string     `json:"body_regex"`
 	Code      int        `json:"code"`
@@ -143,7 +144,6 @@ type PushIfaceWebhook struct {
 
 func (p PushIfaceWebhook) push(args []*PushPair) error {
 	body := PushFormat(p.Body).Format(args)
-	println(body)
 	switch p.Method {
 	case "GET", "POST":
 		resp, code, err := http.Do(p.Method, p.Url, body, p.Headers)
@@ -169,7 +169,7 @@ func (p PushIfaceWebhook) push(args []*PushPair) error {
 
 type PushIfaceServerChan struct {
 	SCKey     string     `json:"sckey"`
-	Title     string `json:"title"`
+	Title     string     `json:"title"`
 	Desp      PushFormat `json:"desp"`
 	BodyRegex string     `json:"body_regex"`
 	Code      int        `json:"code"`

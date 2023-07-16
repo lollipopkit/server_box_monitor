@@ -8,15 +8,15 @@ import (
 	"time"
 
 	"github.com/lollipopkit/gommon/log"
-	os_ "github.com/lollipopkit/gommon/os"
+	"github.com/lollipopkit/gommon/sys"
 	"github.com/lollipopkit/gommon/rate"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
 
 var (
-	Config = new(AppConfig)
+	Config        = new(AppConfig)
 	CheckInterval time.Duration
-	RateLimiter *rate.RateLimiter[string]
+	RateLimiter   *rate.RateLimiter[string]
 )
 
 type AppConfig struct {
@@ -25,7 +25,7 @@ type AppConfig struct {
 	// Valid time units are "s".
 	// Values bigger than 10 seconds are not allowed.
 	Interval string `json:"interval"`
-	Rate string `json:"rate"`
+	Rate     string `json:"rate"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
 }
@@ -33,7 +33,7 @@ type AppConfig struct {
 func ReadAppConfig() error {
 	defer initInterval()
 	defer initRateLimiter()
-	if !os_.Exist(res.AppConfigPath) {
+	if !sys.Exist(res.AppConfigPath) {
 		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
 		if err != nil {
 			log.Err("[CONFIG] marshal default app config failed: %v", err)
@@ -57,7 +57,24 @@ func ReadAppConfig() error {
 	if err != nil {
 		log.Err("[CONFIG] unmarshal app config failed: %v", err)
 	} else if Config.Version < DefaultappConfig.Version {
-		log.Warn("[CONFIG] app config version is too old, please update it")
+		log.Warn("[CONFIG] app config version is too old, new config will be generated")
+		// Backup old config
+		err = os.WriteFile(res.AppConfigPath+".bak", configBytes, 0644)
+		if err != nil {
+			log.Err("[CONFIG] backup old config failed: %v", err)
+			return err
+		}
+		// Generate new config
+		configBytes, err := json.MarshalIndent(DefaultappConfig, "", "\t")
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(res.AppConfigPath, configBytes, 0644)
+		if err != nil {
+			panic(err)
+		}
+		log.Info("[CONFIG] new config generated, edit it and restart the program")
+		os.Exit(0)
 	}
 	return err
 }
@@ -104,7 +121,7 @@ var (
 		"action": "send_group_msg",
 		"params": map[string]interface{}{
 			"group_id": 123456789,
-			"message":  "ServerBox Notification\n{{key}}: {{value}}",
+			"message":  "ServerBox Notification\n{{kvs}}",
 		},
 	}
 	defaultWekhookBodyBytes, _ = json.Marshal(defaultWebhookBody)
@@ -120,24 +137,6 @@ var (
 		Code:      200,
 	}
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
-
-	defaultIOSIface = PushIfaceIOS{
-		Token:     "YOUR_TOKEN",
-		Title:     "Server Notification",
-		Content:   "{{key}}: {{value}}",
-		BodyRegex: ".*",
-		Code:      200,
-	}
-	defaultIOSIfaceBytes, _ = json.Marshal(defaultIOSIface)
-
-	defaultServerChanIface = PushIfaceServerChan{
-		SCKey:     "YOUR_SCKEY",
-		Title:     "Server Notification",
-		Desp:      "{{key}}: {{value}}",
-		BodyRegex: ".*",
-		Code:      200,
-	}
-	defaultServerChanIfaceBytes, _ = json.Marshal(defaultServerChanIface)
 
 	DefaultappConfig = &AppConfig{
 		Version:  2,

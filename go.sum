@@ -9,8 +9,8 @@ github.com/labstack/echo/v4 v4.11.0 h1:4Dmi59tmrnFzOchz4EXuGjJhUfcEkU28iDKsiZVOQ
 github.com/labstack/echo/v4 v4.11.0/go.mod h1:YuYRTSM3CHs2ybfrL8Px48bO6BAnYIN4l8wSTMP6BDQ=
 github.com/labstack/gommon v0.4.0 h1:y7cvthEAEbU0yHOf4axH8ZG2NH8knB9iNSoTO8dyIk8=
 github.com/labstack/gommon v0.4.0/go.mod h1:uW6kP17uPlLJsD3ijUYn3/M5bAxtlZhMI6m3MFxTMTM=
-github.com/lollipopkit/gommon v0.3.7 h1:kROUlge2+/zp6jKzVNLVZ0jVoxqcx6mqhlPhPLlHMWo=
-github.com/lollipopkit/gommon v0.3.7/go.mod h1:DEnIxhHmPQjDSkKFDxwX6oFxMjlHd87G+Dt7U4ZUyRs=
+github.com/lollipopkit/gommon v0.4.0 h1:iBXcSvmOebBM+dR1/tkDZBmahDlyUuoVd/fT6vTQ5M4=
+github.com/lollipopkit/gommon v0.4.0/go.mod h1:DEnIxhHmPQjDSkKFDxwX6oFxMjlHd87G+Dt7U4ZUyRs=
 github.com/mattn/go-colorable v0.1.11/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=

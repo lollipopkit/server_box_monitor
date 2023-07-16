@@ -132,7 +132,7 @@ func (r *Rule) shouldNotifyMemory(s *memStatus, t *Threshold) (bool, *PushPair, 
 			return false, nil, err
 		}
 		return ok, NewPushPair(
-			"Mem " + r.Matcher,
+			"Mem "+r.Matcher,
 			size.String(),
 		), nil
 	case ThresholdTypePercent:
@@ -141,7 +141,7 @@ func (r *Rule) shouldNotifyMemory(s *memStatus, t *Threshold) (bool, *PushPair, 
 			return false, nil, err
 		}
 		return ok, NewPushPair(
-			"Mem " + r.Matcher,
+			"Mem "+r.Matcher,
 			fmt.Sprintf("%.2f%%", percent*100),
 		), nil
 	default:
@@ -173,7 +173,7 @@ func (r *Rule) shouldNotifySwap(s *swapStatus, t *Threshold) (bool, *PushPair, e
 			return false, nil, err
 		}
 		return ok, NewPushPair(
-			"Swap " + r.Matcher,
+			"Swap "+r.Matcher,
 			size.String(),
 		), nil
 	case ThresholdTypePercent:
@@ -182,7 +182,7 @@ func (r *Rule) shouldNotifySwap(s *swapStatus, t *Threshold) (bool, *PushPair, e
 			return false, nil, err
 		}
 		return ok, NewPushPair(
-			"Swap " + r.Matcher,
+			"Swap "+r.Matcher,
 			fmt.Sprintf("%.2f%%", percent*100),
 		), nil
 	default:
@@ -280,7 +280,7 @@ func (r *Rule) shouldNotifyNetwork(s []networkStatus, t *Threshold) (bool, *Push
 		}
 		return ok, NewPushPair(
 			r.Matcher,
-			speed.String() + "/s",
+			speed.String()+"/s",
 		), nil
 	case ThresholdTypeSize:
 		size := Size(0)

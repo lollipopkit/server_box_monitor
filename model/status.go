@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/lollipopkit/gommon/log"
-	os_ "github.com/lollipopkit/gommon/os"
+	"github.com/lollipopkit/gommon/sys"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
 
@@ -132,7 +132,7 @@ func (nss AllNetworkStatus) ReceiveSpeed() (Size, error) {
 }
 
 func RefreshStatus() error {
-	output, _ := os_.Execute("bash", res.ServerBoxShellPath)
+	output, _ := sys.Execute("bash", res.ServerBoxShellPath)
 	err := os.WriteFile(filepath.Join(res.ServerBoxDirPath, "shell_output.log"), []byte(output), 0644)
 	if err != nil {
 		log.Warn("[STATUS] write shell output log failed: %s", err)
