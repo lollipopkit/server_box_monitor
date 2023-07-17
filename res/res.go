@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/lollipopkit/gommon/log"
-	"github.com/lollipopkit/gommon/sys"
 	"github.com/lollipopkit/gommon/rate"
+	"github.com/lollipopkit/gommon/sys"
 )
 
 var (

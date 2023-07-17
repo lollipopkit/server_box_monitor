@@ -285,10 +285,10 @@ func (r *Rule) shouldNotifyNetwork(s []networkStatus, t *Threshold) (bool, *Push
 	case ThresholdTypeSize:
 		size := Size(0)
 		if in {
-			size += net.TimeSequence.New.Receive
+			size += net.Receive()
 		}
 		if out {
-			size += net.TimeSequence.New.Transmit
+			size += net.Transmit()
 		}
 		ok, err := t.True(size)
 		if err != nil {

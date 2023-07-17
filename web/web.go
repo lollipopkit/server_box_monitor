@@ -12,7 +12,7 @@ func Status(c echo.Context) error {
 	cpu := ""
 	if len(s.CPU) > 0 {
 		cpu_, _ := s.CPU[0].UsedPercent()
-		cpu = fmt.Sprintf("%.1f%%", cpu_ * 100)
+		cpu = fmt.Sprintf("%.1f%%", cpu_*100)
 	}
 	mem := ""
 	if s.Mem != nil {
@@ -21,9 +21,9 @@ func Status(c echo.Context) error {
 	net := ""
 	if len(s.Network) > 0 {
 		all := model.AllNetworkStatus(s.Network)
-		rx, _ := all.ReceiveSpeed()
-		tx, _ := all.TransmitSpeed()
-		net = fmt.Sprintf("%s / %s", rx.String(), tx.String())
+		rx := all.Receive().String()
+		tx := all.Transmit().String()
+		net = fmt.Sprintf("%s / %s", rx, tx)
 	}
 	disk := ""
 	if len(s.Disk) > 0 {

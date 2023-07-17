@@ -11,10 +11,19 @@ func init() {
 		Aliases: []string{"s"},
 		Usage:   "Run monitor",
 		Action:  handleServe,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "addr",
+				Aliases: []string{"a"},
+				Usage:   "Listen address",
+				Value:   "0.0.0.0:3770",
+				EnvVars: []string{"SBM_ADDR"},
+			},
+		},
 	})
 }
 
 func handleServe(ctx *cli.Context) error {
-	runner.Start()
+	runner.Start(ctx.String("addr"))
 	return nil
 }

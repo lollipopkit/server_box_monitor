@@ -32,8 +32,8 @@ func init() {
 	}
 }
 
-func Start() {
-	go runWeb()
+func Start(addr string) {
+	go runWeb(addr)
 	go runCheck()
 	// 阻塞主线程
 	select {}
@@ -98,7 +98,7 @@ func runCheck() {
 	}
 }
 
-func runWeb() {
+func runWeb(addr string) {
 	e := echo.New()
 
 	e.Use(middleware.Recover())
@@ -110,5 +110,5 @@ func runWeb() {
 
 	e.GET("/status", web.Status)
 
-	e.Logger.Fatal(e.Start("0.0.0.0:3770"))
+	e.Logger.Fatal(e.Start(addr))
 }

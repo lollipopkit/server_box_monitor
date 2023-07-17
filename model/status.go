@@ -105,6 +105,12 @@ func (ns *networkStatus) ReceiveSpeed() (Size, error) {
 	diff := float64(ns.TimeSequence.New.Receive - ns.TimeSequence.Old.Receive)
 	return Size(diff / CheckInterval.Seconds()), nil
 }
+func (ns *networkStatus) Transmit() Size {
+	return ns.TimeSequence.New.Transmit
+}
+func (ns *networkStatus) Receive() Size {
+	return ns.TimeSequence.New.Receive
+}
 
 type AllNetworkStatus []networkStatus
 
@@ -130,9 +136,23 @@ func (nss AllNetworkStatus) ReceiveSpeed() (Size, error) {
 	}
 	return Size(sum), nil
 }
+func (nss AllNetworkStatus) Transmit() Size {
+	var sum float64
+	for _, ns := range nss {
+		sum += float64(ns.Transmit())
+	}
+	return Size(sum)
+}
+func (nss AllNetworkStatus) Receive() Size {
+	var sum float64
+	for _, ns := range nss {
+		sum += float64(ns.Receive())
+	}
+	return Size(sum)
+}
 
 func RefreshStatus() error {
-	output, _ := sys.Execute("bash", res.ServerBoxShellPath)
+	output, _ := sys.Execute("sh", res.ServerBoxShellPath)
 	err := os.WriteFile(filepath.Join(res.ServerBoxDirPath, "shell_output.log"), []byte(output), 0644)
 	if err != nil {
 		log.Warn("[STATUS] write shell output log failed: %s", err)

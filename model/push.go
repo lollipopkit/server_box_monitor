@@ -79,8 +79,8 @@ func (pf PushFormat) Format(args []*PushPair) string {
 		ss = append(ss, kv)
 	}
 	return strings.Replace(
-		string(pf), 
-		res.PushFormatLocator, 
+		string(pf),
+		res.PushFormatLocator,
 		strings.Join(ss, `\n`), 1)
 }
 

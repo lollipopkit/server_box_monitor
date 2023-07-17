@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/lollipopkit/gommon/log"
-	"github.com/lollipopkit/gommon/sys"
 	"github.com/lollipopkit/gommon/rate"
+	"github.com/lollipopkit/gommon/sys"
 	"github.com/lollipopkit/server_box_monitor/res"
 )
 
@@ -26,7 +26,7 @@ type AppConfig struct {
 	// Values bigger than 10 seconds are not allowed.
 	Interval string `json:"interval"`
 	Rate     string `json:"rate"`
-	Name string `json:"name"`
+	Name     string `json:"name"`
 	Rules    []Rule `json:"rules"`
 	Pushes   []Push `json:"pushes"`
 }
@@ -122,7 +122,7 @@ var (
 		"action": "send_group_msg",
 		"params": map[string]interface{}{
 			"group_id": 123456789,
-			"message":  "Server1\n"+res.PushFormatLocator,
+			"message":  "Server1\n" + res.PushFormatLocator,
 		},
 	}
 	defaultWekhookBodyBytes, _ = json.Marshal(defaultWebhookBody)
@@ -143,7 +143,7 @@ var (
 		Version:  2,
 		Interval: "7s",
 		Rate:     "1/1m",
-		Name: "Server1",
+		Name:     "Server1",
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,

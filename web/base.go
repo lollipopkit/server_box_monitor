@@ -12,6 +12,6 @@ func ok(c echo.Context, data any) error {
 func fail(c echo.Context, code int, data any) error {
 	return c.JSON(500, map[string]any{
 		"code": code,
-		"msg": data,
+		"msg":  data,
 	})
 }
