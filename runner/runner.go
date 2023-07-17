@@ -32,8 +32,8 @@ func init() {
 	}
 }
 
-func Start(addr string) {
-	go runWeb(addr)
+func Start(wc *model.WebConfig) {
+	go runWeb(wc)
 	go runCheck()
 	// 阻塞主线程
 	select {}
@@ -98,7 +98,7 @@ func runCheck() {
 	}
 }
 
-func runWeb(addr string) {
+func runWeb(wc *model.WebConfig) {
 	e := echo.New()
 
 	e.Use(middleware.Recover())
@@ -110,5 +110,11 @@ func runWeb(addr string) {
 
 	e.GET("/status", web.Status)
 
-	e.Logger.Fatal(e.Start(addr))
+	var i any
+	if wc.HaveTLS() {
+		i = e.StartTLS(wc.Addr, wc.Cert, wc.Key)
+	} else {
+		i = e.Start(wc.Addr)
+	}
+	e.Logger.Fatal(i)
 }
