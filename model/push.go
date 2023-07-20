@@ -78,10 +78,19 @@ func (pf PushFormat) Format(args []*PushPair) string {
 		kv := fmt.Sprintf(`%s\n%s: %s`, arg.time, arg.key, arg.value)
 		ss = append(ss, kv)
 	}
-	return strings.Replace(
-		string(pf),
-		res.PushFormatLocator,
-		strings.Join(ss, `\n`), 1)
+	msgReplaced := strings.Replace(
+		string(pf), 
+		res.PushFormatMsgLocator, 
+		strings.Join(ss, `\n`), 
+		1,
+	)
+	nameReplaced := strings.Replace(
+		msgReplaced,
+		res.PushFormatNameLocator,
+		Config.Name,
+		1,
+	)
+	return nameReplaced
 }
 
 type PushType string

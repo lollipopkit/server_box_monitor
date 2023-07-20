@@ -122,7 +122,9 @@ var (
 		"action": "send_group_msg",
 		"params": map[string]interface{}{
 			"group_id": 123456789,
-			"message":  "Server1\n" + res.PushFormatLocator,
+			"message":  res.PushFormatNameLocator + 
+						"\n" + 
+						res.PushFormatMsgLocator,
 		},
 	}
 	defaultWekhookBodyBytes, _ = json.Marshal(defaultWebhookBody)
