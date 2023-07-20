@@ -36,7 +36,7 @@ const (
 	DefaultInterval = time.Second * 7
 	MaxInterval     = time.Second * 10
 
-	PushFormatMsgLocator = "{{msg}}"
+	PushFormatMsgLocator  = "{{msg}}"
 	PushFormatNameLocator = "{{name}}"
 )
 

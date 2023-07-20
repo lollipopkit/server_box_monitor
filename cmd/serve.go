@@ -21,15 +21,15 @@ func init() {
 				EnvVars: []string{"SBM_ADDR"},
 			},
 			&cli.StringFlag{
-				Name: "crt",
+				Name:    "crt",
 				Aliases: []string{"c"},
-				Usage: "TLS certificate file path",
+				Usage:   "TLS certificate file path",
 				EnvVars: []string{"SBM_TLS_CRT"},
 			},
 			&cli.StringFlag{
-				Name: "key",
+				Name:    "key",
 				Aliases: []string{"k"},
-				Usage: "TLS key file path",
+				Usage:   "TLS key file path",
 				EnvVars: []string{"SBM_TLS_KEY"},
 			},
 		},
@@ -40,7 +40,7 @@ func handleServe(ctx *cli.Context) error {
 	webConfig := &model.WebConfig{
 		Addr: ctx.String("addr"),
 		Cert: ctx.String("crt"),
-		Key: ctx.String("key"),
+		Key:  ctx.String("key"),
 	}
 	runner.Start(webConfig)
 	return nil

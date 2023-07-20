@@ -79,9 +79,9 @@ func (pf PushFormat) Format(args []*PushPair) string {
 		ss = append(ss, kv)
 	}
 	msgReplaced := strings.Replace(
-		string(pf), 
-		res.PushFormatMsgLocator, 
-		strings.Join(ss, `\n`), 
+		string(pf),
+		res.PushFormatMsgLocator,
+		strings.Join(ss, `\n`),
 		1,
 	)
 	nameReplaced := strings.Replace(
@@ -107,7 +107,7 @@ type PushIface interface {
 
 type PushIfaceIOS struct {
 	Token     string     `json:"token"`
-	Title     string     `json:"title"`
+	Title     PushFormat `json:"title"`
 	Content   PushFormat `json:"content"`
 	BodyRegex string     `json:"body_regex"`
 	Code      int        `json:"code"`
@@ -115,9 +115,10 @@ type PushIfaceIOS struct {
 
 func (p PushIfaceIOS) push(args []*PushPair) error {
 	content := p.Content.Format(args)
+	title := p.Title.Format(args)
 	body := map[string]string{
 		"token":   p.Token,
-		"title":   p.Title,
+		"title":   title,
 		"content": content,
 	}
 	bodyBytes, err := json.Marshal(body)
@@ -185,7 +186,7 @@ func (p PushIfaceWebhook) push(args []*PushPair) error {
 
 type PushIfaceServerChan struct {
 	SCKey     string     `json:"sckey"`
-	Title     string     `json:"title"`
+	Title     PushFormat `json:"title"`
 	Desp      PushFormat `json:"desp"`
 	BodyRegex string     `json:"body_regex"`
 	Code      int        `json:"code"`
@@ -193,7 +194,13 @@ type PushIfaceServerChan struct {
 
 func (p PushIfaceServerChan) push(args []*PushPair) error {
 	desp := p.Desp.Format(args)
-	url := fmt.Sprintf("https://sctapi.ftqq.com/%s.send?title=%s&desp=%s", p.SCKey, p.Title, desp)
+	title := p.Title.Format(args)
+	url := fmt.Sprintf(
+		"https://sctapi.ftqq.com/%s.send?title=%s&desp=%s",
+		p.SCKey,
+		title,
+		desp,
+	)
 	resp, code, err := http.Do("GET", url, nil, nil)
 	if err != nil {
 		return err
