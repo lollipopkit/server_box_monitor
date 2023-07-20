@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -287,30 +288,39 @@ func parseDiskStatus(s string) error {
 	if len(Status.Disk) != count {
 		Status.Disk = make([]diskStatus, count)
 	}
+	failIdx := sort.IntSlice{}
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
 		fields := strings.Fields(line)
 		if len(fields) != 6 {
-			return errors.Join(ErrInvalidShellOutput, fmt.Errorf("invalid disk status: %s", line))
+			failIdx = append(failIdx, i)
+			continue
 		}
 		Status.Disk[i].MountPath = fields[5]
 		Status.Disk[i].Filesystem = fields[0]
 		total, err := ParseToSize(fields[1])
 		if err != nil {
-			return err
+			failIdx = append(failIdx, i)
+			continue
 		}
 		Status.Disk[i].Total = total
 		used, err := ParseToSize(fields[2])
 		if err != nil {
-			return err
+			failIdx = append(failIdx, i)
+			continue
 		}
 		Status.Disk[i].Used = used
 		avail, err := ParseToSize(fields[3])
 		if err != nil {
-			return err
+			failIdx = append(failIdx, i)
+			continue
 		}
 		Status.Disk[i].Avail = avail
 		Status.Disk[i].UsedPercent = (float64(used) / float64(total)) * 100
+	}
+	sort.Sort(sort.Reverse(failIdx))
+	for _, idx := range failIdx {
+		Status.Disk = append(Status.Disk[:idx], Status.Disk[idx+1:]...)
 	}
 	return nil
 }
