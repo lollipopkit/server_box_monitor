@@ -53,7 +53,6 @@ func (p *Push) Push(args []*PushPair) error {
 	return iface.push(args)
 }
 
-// {{key}} {{value}}
 type PushFormat string
 type PushPair struct {
 	key   string

@@ -264,8 +264,9 @@ func parseCPUStatus(s string) error {
 			if err != nil {
 				return err
 			}
-			total := 0
-			for i := 2; i < 11; i++ {
+			used := sys + user
+			total := used
+			for i := 3; i < 8; i++ {
 				v, err := strconv.Atoi(fields[i])
 				if err != nil {
 					return err
@@ -273,7 +274,7 @@ func parseCPUStatus(s string) error {
 				total += v
 			}
 			Status.CPU[i].TimeSequence.Update(&cpuOneTimeStatus{
-				Used:  user + sys,
+				Used:  used,
 				Total: total,
 			})
 		}
