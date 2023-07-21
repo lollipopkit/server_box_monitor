@@ -12,7 +12,7 @@ func Status(c echo.Context) error {
 	cpu := ""
 	if len(s.CPU) > 0 {
 		cpu_, _ := s.CPU[0].UsedPercent()
-		cpu = fmt.Sprintf("%.1f%%", cpu_*100)
+		cpu = fmt.Sprintf("%.1f%%", cpu_)
 	}
 	mem := ""
 	if s.Mem != nil {

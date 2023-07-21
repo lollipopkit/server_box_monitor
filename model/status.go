@@ -256,17 +256,12 @@ func parseCPUStatus(s string) error {
 			if len(fields) != 11 {
 				return errors.Join(ErrInvalidShellOutput, fmt.Errorf("invalid cpu status: %s", line))
 			}
-			user, err := strconv.Atoi(fields[1])
+			idle, err := strconv.Atoi(fields[4])
 			if err != nil {
 				return err
 			}
-			sys, err := strconv.Atoi(fields[2])
-			if err != nil {
-				return err
-			}
-			used := sys + user
-			total := used
-			for i := 3; i < 8; i++ {
+			total := 0
+			for i := 1; i < 8; i++ {
 				v, err := strconv.Atoi(fields[i])
 				if err != nil {
 					return err
@@ -274,7 +269,7 @@ func parseCPUStatus(s string) error {
 				total += v
 			}
 			Status.CPU[i].TimeSequence.Update(&cpuOneTimeStatus{
-				Used:  used,
+				Used:  total - idle,
 				Total: total,
 			})
 		}
