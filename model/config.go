@@ -1,6 +1,7 @@
 package model
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"strconv"
@@ -31,22 +32,30 @@ type AppConfig struct {
 	Pushes   []Push `json:"pushes"`
 }
 
+func InitConfig() error {
+	buf := new(bytes.Buffer)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "\t")
+	err := enc.Encode(DefaultAppConfig)
+	if err != nil {
+		log.Err("[CONFIG] marshal default app config failed: %v", err)
+		return err
+	}
+	err = os.WriteFile(res.AppConfigPath, buf.Bytes(), 0644)
+	if err != nil {
+		log.Err("[CONFIG] write default app config failed: %v", err)
+		return err
+	}
+	Config = DefaultAppConfig
+	return nil
+}
+
 func ReadAppConfig() error {
 	defer initInterval()
 	defer initRateLimiter()
 	if !sys.Exist(res.AppConfigPath) {
-		configBytes, err := json.MarshalIndent(DefaultAppConfig, "", "\t")
-		if err != nil {
-			log.Err("[CONFIG] marshal default app config failed: %v", err)
-			return err
-		}
-		err = os.WriteFile(res.AppConfigPath, configBytes, 0644)
-		if err != nil {
-			log.Err("[CONFIG] write default app config failed: %v", err)
-			return err
-		}
-		Config = DefaultAppConfig
-		return nil
+		return InitConfig()
 	}
 
 	configBytes, err := os.ReadFile(res.AppConfigPath)
@@ -142,20 +151,15 @@ var (
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
 
 	DefaultAppConfig = &AppConfig{
-		Version:  2,
-		Interval: "7s",
-		Rate:     "1/1m",
-		Name:     "Server1",
+		Version:  res.ConfVersion,
+		Interval: res.DefaultIntervalStr,
+		Rate:     res.DefaultRateStr,
+		Name:     res.DefaultSeverName,
 		Rules: []Rule{
 			{
 				MonitorType: MonitorTypeCPU,
-				Threshold:   ">=77%",
-				Matcher:     "0",
-			},
-			{
-				MonitorType: MonitorTypeNetwork,
-				Threshold:   ">=7.7m/s",
-				Matcher:     "eth0",
+				Threshold:   `>=77%`,
+				Matcher:     "cpu",
 			},
 		},
 		Pushes: []Push{

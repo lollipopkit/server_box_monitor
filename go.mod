@@ -3,8 +3,8 @@ module github.com/lollipopkit/server_box_monitor
 go 1.20
 
 require (
-	github.com/labstack/echo/v4 v4.11.0
-	github.com/lollipopkit/gommon v0.4.0
+	github.com/labstack/echo/v4 v4.11.1
+	github.com/lollipopkit/gommon v0.4.3
 	github.com/urfave/cli/v2 v2.25.7
 )
 

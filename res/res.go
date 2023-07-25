@@ -33,8 +33,13 @@ var (
 )
 
 const (
-	DefaultInterval = time.Second * 7
-	MaxInterval     = time.Second * 10
+	ConfVersion = 2
+
+	DefaultInterval    = time.Second * 7
+	DefaultIntervalStr = "7s"
+	DefaultRateStr     = "1/1m"
+	DefaultSeverName   = "Server 1"
+	MaxInterval        = time.Second * 10
 
 	PushFormatMsgLocator  = "{{msg}}"
 	PushFormatNameLocator = "{{name}}"
