@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -41,6 +42,12 @@ func (p *Push) GetIface() (PushIface, error) {
 			return nil, err
 		}
 		return iface, nil
+	case PushTypeBark:
+		var iface PushIfaceBark
+		err := json.Unmarshal(p.Iface, &iface)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return nil, errors.New("unknown push type")
 }
@@ -98,6 +105,7 @@ const (
 	PushTypeIOS        PushType = "ios"
 	PushTypeWebhook             = "webhook"
 	PushTypeServerChan          = "server_chan"
+	PushTypeBark                = "bark"
 )
 
 type PushIface interface {
@@ -200,6 +208,58 @@ func (p PushIfaceServerChan) push(args []*PushPair) error {
 		title,
 		desp,
 	)
+	resp, code, err := http.Do("GET", url, nil, nil)
+	if err != nil {
+		return err
+	}
+	if p.Code != 0 && code != p.Code {
+		return fmt.Errorf("code: %d, resp: %s", code, string(resp))
+	}
+	if p.BodyRegex != "" {
+		reg, err := regexp.Compile(p.BodyRegex)
+		if err != nil {
+			return fmt.Errorf("compile regex failed: %s", err.Error())
+		}
+		if !reg.Match(resp) {
+			return fmt.Errorf("resp: %s", string(resp))
+		}
+	}
+	return nil
+}
+
+type barkLevel string
+
+const (
+	barkLevelActive    barkLevel = "active"
+	barkLevelSensitive           = "timeSensitive"
+	barkLevelPassive             = "passive"
+)
+
+type PushIfaceBark struct {
+	Server    string    `json:"server"`
+	Title     string    `json:"title"`
+	Body      string    `json:"body"`
+	Level     barkLevel `json:"level"`
+	BodyRegex string    `json:"body_regex"`
+	Code      int       `json:"code"`
+}
+
+func (p PushIfaceBark) push(args []*PushPair) error {
+	body := p.Body
+	for _, arg := range args {
+		body = strings.Replace(body, arg.key, arg.value, 1)
+	}
+	if len(p.Server) == 0 {
+		p.Server = "https://api.day.app"
+	}
+	url := path.Join(
+		p.Server,
+		p.Title,
+		body,
+	)
+	if len(p.Level) != 0 {
+		url += fmt.Sprintf("?level=%s", p.Level)
+	}
 	resp, code, err := http.Do("GET", url, nil, nil)
 	if err != nil {
 		return err
