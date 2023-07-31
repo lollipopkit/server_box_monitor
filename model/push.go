@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path"
 	"regexp"
@@ -11,6 +10,15 @@ import (
 
 	"github.com/lollipopkit/gommon/http"
 	"github.com/lollipopkit/server_box_monitor/res"
+)
+
+type PushType string
+
+const (
+	PushTypeIOS        PushType = "ios"
+	PushTypeWebhook             = "webhook"
+	PushTypeServerChan          = "server_chan"
+	PushTypeBark                = "bark"
 )
 
 type Push struct {
@@ -49,7 +57,7 @@ func (p *Push) GetIface() (PushIface, error) {
 			return nil, err
 		}
 	}
-	return nil, errors.New("unknown push type")
+	return nil, fmt.Errorf("unknown push type: %s", p.Type)
 }
 
 func (p *Push) Push(args []*PushPair) error {
@@ -99,15 +107,6 @@ func (pf PushFormat) Format(args []*PushPair) string {
 	return nameReplaced
 }
 
-type PushType string
-
-const (
-	PushTypeIOS        PushType = "ios"
-	PushTypeWebhook             = "webhook"
-	PushTypeServerChan          = "server_chan"
-	PushTypeBark                = "bark"
-)
-
 type PushIface interface {
 	push([]*PushPair) error
 }
@@ -137,8 +136,9 @@ func (p PushIfaceIOS) push(args []*PushPair) error {
 		"https://push.lolli.tech/v1/ios",
 		bodyBytes,
 		map[string]string{
-			"Content-Type": "application/json",
 			"AppID":        "com.lollipopkit.toolbox",
+			"Content-Type": "application/json",
+			"Env":          "prod",
 		},
 	)
 
