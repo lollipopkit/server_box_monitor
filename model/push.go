@@ -236,25 +236,25 @@ const (
 )
 
 type PushIfaceBark struct {
-	Server    string    `json:"server"`
-	Title     string    `json:"title"`
-	Body      string    `json:"body"`
-	Level     barkLevel `json:"level"`
-	BodyRegex string    `json:"body_regex"`
-	Code      int       `json:"code"`
+	Server    string     `json:"server"`
+	Key       string     `json:"key"`
+	Title     PushFormat `json:"title"`
+	Body      PushFormat `json:"body"`
+	Level     barkLevel  `json:"level"`
+	BodyRegex string     `json:"body_regex"`
+	Code      int        `json:"code"`
 }
 
 func (p PushIfaceBark) push(args []*PushPair) error {
-	body := p.Body
-	for _, arg := range args {
-		body = strings.Replace(body, arg.key, arg.value, 1)
-	}
+	body := p.Body.Format(args)
+	title := p.Title.Format(args)
 	if len(p.Server) == 0 {
 		p.Server = "https://api.day.app"
 	}
 	url := path.Join(
 		p.Server,
-		p.Title,
+		p.Key,
+		title,
 		body,
 	)
 	if len(p.Level) != 0 {
