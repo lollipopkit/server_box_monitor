@@ -91,10 +91,11 @@ func runCheck() {
 			model.RateLimiter.Acquire(push.Name)
 			log.Suc("[PUSH] %s success", push.Name)
 
-			pushPairsLock.Lock()
-			pushPairs = pushPairs[:0]
-			pushPairsLock.Unlock()
 		}
+		
+		pushPairsLock.Lock()
+		pushPairs = pushPairs[:0]
+		pushPairsLock.Unlock()
 	}
 }
 
