@@ -125,6 +125,9 @@ func (r *Rule) shouldNotifyMemory(s *memStatus, t *Threshold) (bool, *PushPair, 
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
 	}
 
+	// 使用百分比来对比
+	percent *= 100
+
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
 		ok, err := t.True(size)
@@ -142,7 +145,7 @@ func (r *Rule) shouldNotifyMemory(s *memStatus, t *Threshold) (bool, *PushPair, 
 		}
 		return ok, NewPushPair(
 			"Mem "+r.Matcher,
-			fmt.Sprintf("%.2f%%", percent*100),
+			fmt.Sprintf("%.2f%%", percent),
 		), nil
 	default:
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for memory: %s", t.ThresholdType.Name()))
@@ -166,6 +169,9 @@ func (r *Rule) shouldNotifySwap(s *swapStatus, t *Threshold) (bool, *PushPair, e
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid matcher: %s", r.Matcher))
 	}
 
+	// 使用百分比来对比
+	percent *= 100
+
 	switch t.ThresholdType {
 	case ThresholdTypeSize:
 		ok, err := t.True(size)
@@ -183,7 +189,7 @@ func (r *Rule) shouldNotifySwap(s *swapStatus, t *Threshold) (bool, *PushPair, e
 		}
 		return ok, NewPushPair(
 			"Swap "+r.Matcher,
-			fmt.Sprintf("%.2f%%", percent*100),
+			fmt.Sprintf("%.2f%%", percent),
 		), nil
 	default:
 		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("invalid threshold type for swap: %s", t.ThresholdType.Name()))
