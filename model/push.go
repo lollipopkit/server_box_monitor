@@ -255,7 +255,7 @@ func (p PushIfaceBark) push(args []*PushPair) error {
 	titleEscape := url.QueryEscape(title)
 	bodyEscape := url.QueryEscape(body)
 	url_ := fmt.Sprintf(
-		"%s/%s/%s/%s", 
+		"%s/%s/%s/%s",
 		p.Server, p.Key, titleEscape, bodyEscape,
 	)
 	resp, code, err := http.Do("GET", url_, nil, nil)

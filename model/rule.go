@@ -235,17 +235,22 @@ func (r *Rule) shouldNotifyNetwork(s []networkStatus, t *Threshold) (bool, *Push
 		return false, nil, nil
 	}
 
-	var net networkStatus
-	var have bool
-	for _, n := range s {
-		if strings.Contains(r.Matcher, n.Interface) {
-			net = n
-			have = true
-			break
+	var net networkIface
+	// 如果 matcher 为空，则默认计算所有网卡
+	if len(s) == 0 {
+		net = AllNetworkStatus(Status.Network)
+	} else {
+		var have bool
+		for _, n := range s {
+			if strings.Contains(r.Matcher, n.Interface) {
+				net = n
+				have = true
+				break
+			}
 		}
-	}
-	if !have {
-		return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("network interface not found: %s", r.Matcher))
+		if !have {
+			return false, nil, errors.Join(ErrInvalidRule, fmt.Errorf("network interface not found: %s", r.Matcher))
+		}
 	}
 
 	// 判断是否计算出/入流量

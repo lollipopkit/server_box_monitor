@@ -87,29 +87,37 @@ type networkOneTimeStatus struct {
 	Transmit Size
 	Receive  Size
 }
+
+type networkIface interface {
+	TransmitSpeed() (Size, error)
+	ReceiveSpeed() (Size, error)
+	Transmit() Size
+	Receive() Size
+}
+
 type networkStatus struct {
 	Interface string
 	TimeSequence[networkOneTimeStatus]
 }
 
-func (ns *networkStatus) TransmitSpeed() (Size, error) {
+func (ns networkStatus) TransmitSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
 	diff := float64(ns.TimeSequence.New.Transmit - ns.TimeSequence.Old.Transmit)
 	return Size(diff / CheckInterval.Seconds()), nil
 }
-func (ns *networkStatus) ReceiveSpeed() (Size, error) {
+func (ns networkStatus) ReceiveSpeed() (Size, error) {
 	if ns.TimeSequence.New == nil || ns.TimeSequence.Old == nil {
 		return 0, ErrNotReady
 	}
 	diff := float64(ns.TimeSequence.New.Receive - ns.TimeSequence.Old.Receive)
 	return Size(diff / CheckInterval.Seconds()), nil
 }
-func (ns *networkStatus) Transmit() Size {
+func (ns networkStatus) Transmit() Size {
 	return ns.TimeSequence.New.Transmit
 }
-func (ns *networkStatus) Receive() Size {
+func (ns networkStatus) Receive() Size {
 	return ns.TimeSequence.New.Receive
 }
 
@@ -170,23 +178,23 @@ func ParseStatus(s string) error {
 	if len(segments) != 7 {
 		return errors.Join(ErrInvalidShellOutput, fmt.Errorf("expect 7 segments, but got %d", len(segments)))
 	}
-	err := parseNetworkStatus(segments[1])
+	err := ParseNetworkStatus(segments[1])
 	if err != nil {
 		log.Warn("parse network status failed: %s", err)
 	}
-	err = parseCPUStatus(segments[2])
+	err = ParseCPUStatus(segments[2])
 	if err != nil {
 		log.Warn("parse cpu status failed: %s", err)
 	}
-	err = parseDiskStatus(segments[3])
+	err = ParseDiskStatus(segments[3])
 	if err != nil {
 		log.Warn("parse disk status failed: %s", err)
 	}
-	err = parseMemAndSwapStatus(segments[4])
+	err = ParseMemAndSwapStatus(segments[4])
 	if err != nil {
 		log.Warn("parse mem status failed: %s", err)
 	}
-	err = parseTemperatureStatus(segments[5], segments[6])
+	err = ParseTemperatureStatus(segments[5], segments[6])
 	if err != nil {
 		log.Warn("parse temperature status failed: %s", err)
 	}
@@ -204,7 +212,7 @@ func initSwap() {
 	}
 }
 
-func parseMemAndSwapStatus(s string) error {
+func ParseMemAndSwapStatus(s string) error {
 	initMem()
 	initSwap()
 	lines := strings.Split(s, "\n")
@@ -243,7 +251,7 @@ func parseMemAndSwapStatus(s string) error {
 	return nil
 }
 
-func parseCPUStatus(s string) error {
+func ParseCPUStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
 	if len(Status.CPU) != count {
@@ -277,7 +285,7 @@ func parseCPUStatus(s string) error {
 	return nil
 }
 
-func parseDiskStatus(s string) error {
+func ParseDiskStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	lines = lines[1:]
 	count := len(lines)
@@ -321,7 +329,7 @@ func parseDiskStatus(s string) error {
 	return nil
 }
 
-func parseTemperatureStatus(s1, s2 string) error {
+func ParseTemperatureStatus(s1, s2 string) error {
 	if strings.Contains(s1, "/sys/class/thermal/thermal_zone*/type") {
 		return nil
 	}
@@ -345,7 +353,7 @@ func parseTemperatureStatus(s1, s2 string) error {
 	return nil
 }
 
-func parseNetworkStatus(s string) error {
+func ParseNetworkStatus(s string) error {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	count := len(lines)
 	if len(Status.Network) != count-2 {

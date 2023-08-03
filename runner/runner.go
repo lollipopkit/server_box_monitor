@@ -92,7 +92,7 @@ func runCheck() {
 			log.Suc("[PUSH] %s success", push.Name)
 
 		}
-		
+
 		pushPairsLock.Lock()
 		pushPairs = pushPairs[:0]
 		pushPairsLock.Unlock()
