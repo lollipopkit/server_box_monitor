@@ -138,13 +138,20 @@ rm /usr/local/bin/server_box_monitor
 echo "Uninstall success"
 }
 
-# '-i' -> install
-# '-u' -> uninstall
-case $1 in
-    -i)
+# Request input
+echo "ServerBoxMonitor (Un)Installer"
+echo "----------------------------"
+echo "1. Install"
+echo "2. Uninstall"
+echo "----------------------------"
+echo -n "Please select: "
+read action
+
+case $action in
+    1)
         install
         ;;
-    -u)
+    2)
         uninstall
         ;;
     *)
