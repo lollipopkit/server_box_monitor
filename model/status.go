@@ -230,24 +230,19 @@ func ParseMemAndSwapStatus(s string) error {
 		switch true {
 		case strings.HasPrefix(line, "MemTotal:"):
 			Status.Mem.Total = size
-			fallthrough
 		case strings.HasPrefix(line, "MemFree:"):
 			Status.Mem.Free = size
-			Status.Mem.Used = Status.Mem.Total - Status.Mem.Free
-			fallthrough
 		case strings.HasPrefix(line, "MemAvailable:"):
 			Status.Mem.Avail = size
 		case strings.HasPrefix(line, "SwapTotal:"):
 			Status.Swap.Total = size
-			fallthrough
 		case strings.HasPrefix(line, "SwapFree:"):
 			Status.Swap.Free = size
-			Status.Swap.Used = Status.Swap.Total - Status.Swap.Free
-			fallthrough
 		case strings.HasPrefix(line, "SwapCached:"):
-			Status.Swap.Cached = size
+			Status.Swap.Used = size
 		}
 	}
+	Status.Mem.Used = Status.Mem.Total - Status.Mem.Avail
 	return nil
 }
 
