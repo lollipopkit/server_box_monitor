@@ -2,8 +2,10 @@ package web
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/lollipopkit/gommon/util"
 	"github.com/lollipopkit/server_box_monitor/model"
 )
 
@@ -25,18 +27,24 @@ func Status(c echo.Context) error {
 		tx := all.Transmit().String()
 		net = fmt.Sprintf("%s / %s", rx, tx)
 	}
-	disk := ""
-	if len(s.Disk) > 0 {
-		d := s.Disk[0]
-		for _, v := range s.Disk {
-			if v.MountPath == "/" {
-				d = v
-				break
-			}
+	diskUsed := model.Size(0)
+	diskTotal := model.Size(0)
+	diskDevs := []string{}
+	for _, v := range s.Disk {
+		if !strings.HasPrefix(v.Filesystem, "/dev") {
+			continue
 		}
-		disk = fmt.Sprintf("%s / %s", d.Used.String(), d.Total.String())
+		if util.Contains(diskDevs, v.Filesystem) {
+			continue
+		}
+		diskDevs = append(diskDevs, v.Filesystem)
+		diskUsed += v.Used
+		diskTotal += v.Total
 	}
-
+	disk := ""
+	if diskTotal > 0 {
+		disk = fmt.Sprintf("%s / %s", diskUsed.String(), diskTotal.String())
+	}
 	status := map[string]string{
 		"name": model.Config.Name,
 		"cpu":  cpu,

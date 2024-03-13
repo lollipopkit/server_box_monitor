@@ -149,6 +149,14 @@ var (
 		Code:      200,
 	}
 	defaultWebhookIfaceBytes, _ = json.Marshal(defaultWebhookIface)
+	defaultIosIface = PushIfaceIOS{
+		Token: "",
+		Title: res.PushFormatNameLocator,
+		Content: res.PushFormatMsgLocator,
+		BodyRegex: ".*",
+		Code: 200,
+	}
+	defaultIosIfaceBytes, _ = json.Marshal(defaultIosIface)
 
 	DefaultAppConfig = &AppConfig{
 		Version:  res.ConfVersion,
@@ -167,6 +175,11 @@ var (
 				Type:  PushTypeWebhook,
 				Name:  "QQ Group",
 				Iface: defaultWebhookIfaceBytes,
+			},
+			{
+				Type: PushTypeIOS,
+				Name: "My iPhone",
+				Iface: defaultIosIfaceBytes,
 			},
 		},
 	}
