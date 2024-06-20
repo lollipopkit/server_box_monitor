@@ -1,7 +1,8 @@
-# (Un)Install script for installing ServerBoxMonitor
+#!/bin/sh
+# (Un)Install script for ServerBoxMonitor
 
 # Check root
-if [ $(id -u) -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
     echo "Please run as root or use sudo"
     exit 1
 fi
@@ -23,22 +24,23 @@ download() {
             ;;
     esac
 
-    # Check wget
-    if ! command -v wget >/dev/null 2>&1; then
-        echo "Please install wget"
+    # Check curl
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "Please install curl"
         exit 1
     fi
 
     # Generate download url
     newestTag=$(curl -s https://api.github.com/repos/lollipopkit/server_box_monitor/releases/latest | grep tag_name | cut -d '"' -f 4)
     # Remove 'v' at the start -> "0.1.0"
-    newestTagLen=$(expr length $newestTag)
-    APPVER=$(expr substr $newestTag 2 $newestTagLen)
+    newestTagLen=$(expr length "$newestTag")
+    APPVER=$(expr substr "$newestTag" 2 "$newestTagLen")
     DOWNLOAD_URL="https://github.com/lollipopkit/server_box_monitor/releases/download/v${APPVER}/server_box_monitor_${APPVER}_linux_$arch.tar.gz"
 
     # Download binary
     echo "Download $DOWNLOAD_URL"
-    wget -q --show-progress $DOWNLOAD_URL -O /tmp/server_box_monitor.tar.gz
+
+    curl -sL "$DOWNLOAD_URL" -o /tmp/server_box_monitor.tar.gz
     if [ ! -f /tmp/server_box_monitor.tar.gz ]; then
         echo "Download binary failed"
         exit 1
@@ -49,7 +51,7 @@ download() {
 cleanup() {
     # Clean up
     echo "Cleaning up..."
-    rm /tmp/server_box_monitor.tar.gz
+    rm -f /tmp/server_box_monitor.tar.gz
     rm -rf /tmp/server_box_monitor
 }
 
@@ -75,13 +77,19 @@ install_binary() {
 }
 
 install() {
+    # If already installed, skip
+    if [ -f /usr/local/bin/server_box_monitor ] && [ -f /etc/systemd/system/server_box_monitor.service ]; then
+        echo "Already installed, use 'upgrade' or 'uninstall'."
+        exit 0
+    fi
+
     download
 
     install_binary
 
     # Check systemd
     if [ ! -d /etc/systemd ]; then
-        echo "No systemd found"
+        echo "Distribution without systemd is not supported yet."
         exit 1
     fi
 
@@ -145,11 +153,11 @@ uninstall() {
     
     # Remove systemd service
     echo "Removing systemd service..."
-    rm /etc/systemd/system/server_box_monitor.service
+    rm -f /etc/systemd/system/server_box_monitor.service
     
     # Remove binary
     echo "Removing binary..."
-    rm /usr/local/bin/server_box_monitor
+    rm -f /usr/local/bin/server_box_monitor
     
     echo "Uninstall success"
 }
@@ -164,7 +172,7 @@ upgrade() {
         exit 0
     fi
 
-    rm /usr/local/bin/server_box_monitor
+    rm -f /usr/local/bin/server_box_monitor
 
     download
 
@@ -177,7 +185,6 @@ upgrade() {
         echo "Restart systemd service failed"
         exit 1
     fi
-
 
     echo "Upgrade success"
 }
