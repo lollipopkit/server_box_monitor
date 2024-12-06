@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/labstack/echo/v4 v4.11.1
-	github.com/lollipopkit/gommon v0.4.3
+	github.com/lollipopkit/gommon v0.0.0-20231106103911-6f064c330015
 	github.com/urfave/cli/v2 v2.25.7
 )
 
